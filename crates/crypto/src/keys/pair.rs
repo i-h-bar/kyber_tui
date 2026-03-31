@@ -5,13 +5,14 @@ use aes_gcm::{
 use base64::{engine::general_purpose::STANDARD, Engine};
 use pqc_kyber::{decapsulate, encapsulate, keypair};
 use pqcrypto_sphincsplus::sphincsshake128fsimple::{
-    self, SecretKey as SignSecretKey, SignedMessage,
+    self, SignedMessage,
 };
 use pqcrypto_traits::sign::SignedMessage as SignedMessageTrait;
 use rand::rngs::OsRng;
 use rand::RngCore;
 use thiserror::Error;
 use crate::keys::public::Public;
+use crate::keys::secret::Secret;
 
 /// All data transmitted from sender to recipient.
 pub struct EncryptedMessage {
@@ -57,11 +58,6 @@ impl EncryptedMessage {
     }
 }
 
-pub struct Secret {
-    kem: [u8; 1632],
-    signing: SignSecretKey,
-}
-
 pub struct KeyPair {
     pub public: Public,
     secret: Secret,
@@ -94,10 +90,7 @@ impl KeyPair {
 
         Ok(KeyPair {
             public: Public::new(kem.public, sign_public),
-            secret: Secret {
-                kem: kem.secret,
-                signing: sign_secret,
-            },
+            secret: Secret::new(kem.secret, sign_secret),
         })
     }
 
@@ -123,7 +116,7 @@ impl KeyPair {
             .map_err(|_| KeyError::EncryptionFailed)?;
 
         // Sign the ciphertext and store as raw bytes.
-        let signed_ciphertext = sphincsshake128fsimple::sign(&aes_ciphertext, &self.secret.signing)
+        let signed_ciphertext = sphincsshake128fsimple::sign(&aes_ciphertext, self.secret.signing())
             .as_bytes()
             .to_vec();
 
@@ -152,7 +145,7 @@ impl KeyPair {
             .map_err(|_| KeyError::VerificationFailed)?;
 
         // Recover the shared secret with our KEM private key.
-        let shared_secret = decapsulate(&msg.kyber_ciphertext, &self.secret.kem)
+        let shared_secret = decapsulate(&msg.kyber_ciphertext, self.secret.kem())
             .map_err(|_| KeyError::DecapsulationFailed)?;
 
         // Decrypt.

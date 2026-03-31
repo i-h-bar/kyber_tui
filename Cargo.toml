@@ -1,13 +1,11 @@
-[package]
-name = "kyber_tui"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+members =[
+    "crates/api", "crates/contracts",
+    "crates/crypto",
+    "crates/tui",
+]
+resolver = "2"
 
-[dependencies]
-aes-gcm = "0.10"
-pqc_kyber = {version = "0.7.1", features = ["kyber512", "90s", "avx2"]}
-pqcrypto-sphincsplus = { version = "0.7.2" }
-rand = "0.8.5"
-thiserror = "2.0.18"
-pqcrypto-traits = "0.3"
-base64 = "0.22"
+[workspace.dependencies]
+kyber_crypto = { path="crates/crypto" }
+contracts = { path="crates/contracts" }
