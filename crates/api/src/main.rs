@@ -1,7 +1,9 @@
-mod exchange;
+mod ports;
+mod domain;
+mod adapters;
 
 use axum::{routing::{get, post}, Router};
-use crate::exchange::exchange;
+use domain::exchange::exchange;
 
 #[tokio::main]
 async fn main() {

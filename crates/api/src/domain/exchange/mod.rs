@@ -8,6 +8,7 @@ pub async fn exchange(Json(payload): Json<ExchangeRequest>) -> (StatusCode, Json
     let pub_key = Public::from_b64(&payload.pub_key).unwrap();
     let key_pair = KeyPair::generate().unwrap();
     let response = ExchangeResponse{
+        session_id: payload.session_id,
         pub_key: key_pair.public.to_b64()
     };
 

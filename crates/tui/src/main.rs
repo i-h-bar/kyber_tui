@@ -1,11 +1,13 @@
 use contracts::exchange::{ExchangeRequest, ExchangeResponse};
 use kyber_crypto::keys::KeyPair;
+use uuid::Uuid;
 
 #[tokio::main]
 async fn main() {
     let key_pair = KeyPair::generate().unwrap();
 
     let request = ExchangeRequest {
+        session_id: Uuid::new_v4(),
         pub_key: key_pair.public.to_b64(),
     };
     let client = reqwest::Client::new();
@@ -21,5 +23,5 @@ async fn main() {
         .await
         .unwrap();
     
-    println!("{}", response.pub_key);
+    println!("{:?}", response);
 }
