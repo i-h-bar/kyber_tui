@@ -6,9 +6,12 @@ use crate::adapters::drivers::create_portal;
 use crate::adapters::services::cache::create_cache;
 use crate::domain::Application;
 use crate::ports::drivers::portal::Portal;
+use dotenv::dotenv;
 
 #[tokio::main]
 async fn main() {
+    dotenv().ok();
+
     let cache = create_cache();
     let application = Application::new(cache);
 
