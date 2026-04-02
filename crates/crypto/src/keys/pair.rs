@@ -1,18 +1,16 @@
-use aes_gcm::{
-    aead::{Aead, KeyInit}, Aes256Gcm,
-    Nonce,
-};
-use base64::{engine::general_purpose::STANDARD, Engine};
-use pqc_kyber::{decapsulate, encapsulate, keypair};
-use pqcrypto_sphincsplus::sphincsshake128fsimple::{
-    self, SignedMessage,
-};
-use pqcrypto_traits::sign::SignedMessage as SignedMessageTrait;
-use rand::rngs::OsRng;
-use rand::RngCore;
-use thiserror::Error;
 use crate::keys::public::Public;
 use crate::keys::secret::Secret;
+use aes_gcm::{
+    Aes256Gcm, Nonce,
+    aead::{Aead, KeyInit},
+};
+use base64::{Engine, engine::general_purpose::STANDARD};
+use pqc_kyber::{decapsulate, encapsulate, keypair};
+use pqcrypto_sphincsplus::sphincsshake128fsimple::{self, SignedMessage};
+use pqcrypto_traits::sign::SignedMessage as SignedMessageTrait;
+use rand::RngCore;
+use rand::rngs::OsRng;
+use thiserror::Error;
 
 /// All data transmitted from sender to recipient.
 pub struct EncryptedMessage {
@@ -116,9 +114,10 @@ impl KeyPair {
             .map_err(|_| KeyError::EncryptionFailed)?;
 
         // Sign the ciphertext and store as raw bytes.
-        let signed_ciphertext = sphincsshake128fsimple::sign(&aes_ciphertext, self.secret.signing())
-            .as_bytes()
-            .to_vec();
+        let signed_ciphertext =
+            sphincsshake128fsimple::sign(&aes_ciphertext, self.secret.signing())
+                .as_bytes()
+                .to_vec();
 
         Ok(EncryptedMessage {
             kyber_ciphertext,

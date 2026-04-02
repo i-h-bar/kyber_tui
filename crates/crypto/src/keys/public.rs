@@ -1,7 +1,7 @@
-use base64::{engine::general_purpose::STANDARD, Engine};
+use crate::keys::KeyError;
+use base64::{Engine, engine::general_purpose::STANDARD};
 use pqcrypto_sphincsplus::sphincsshake128fsimple::PublicKey as SignPublicKey;
 use pqcrypto_traits::sign::PublicKey;
-use crate::keys::KeyError;
 
 pub struct Public {
     kem: [u8; 800],
@@ -14,14 +14,21 @@ impl Public {
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Public, KeyError> {
-        let kem: [u8; 800] = bytes[..800].try_into().map_err(|_| KeyError::DeserializationFailed)?;
-        let signing = SignPublicKey::from_bytes(&bytes[800..]).map_err(|_| KeyError::DeserializationFailed)?;
+        let kem: [u8; 800] = bytes[..800]
+            .try_into()
+            .map_err(|_| KeyError::DeserializationFailed)?;
+        let signing = SignPublicKey::from_bytes(&bytes[800..])
+            .map_err(|_| KeyError::DeserializationFailed)?;
 
         Ok(Public { kem, signing })
     }
 
     pub fn from_b64(base64: &str) -> Result<Public, KeyError> {
-        Ok(Self::from_bytes(&STANDARD.decode(base64).map_err(|_| KeyError::DeserializationFailed)?)?)
+        Ok(Self::from_bytes(
+            &STANDARD
+                .decode(base64)
+                .map_err(|_| KeyError::DeserializationFailed)?,
+        )?)
     }
 
     #[must_use]

@@ -2,4 +2,4 @@ pub mod pair;
 pub mod public;
 pub mod secret;
 
-pub use pair::{KeyPair, KeyError};
+pub use pair::{KeyError, KeyPair};

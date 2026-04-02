@@ -1,21 +1,20 @@
+use crate::ports::services::cache::{Cache, CachedSession};
 use async_trait::async_trait;
 use redis::Client;
-use crate::ports::services::cache::{Cache, CachedSession};
 
-struct RedisCache {
+pub struct RedisCache {
     client: Client,
 }
 
-impl RedisCache {
-    fn init() -> Self {
+impl RedisCache {}
+
+#[async_trait]
+impl Cache for RedisCache {
+    fn create() -> Self {
         Self {
             client: Client::open("redis://127.0.0.1/").unwrap(),
         }
     }
-}
-
-#[async_trait]
-impl Cache for RedisCache {
     async fn save_session(self, session: CachedSession) {
         todo!()
     }

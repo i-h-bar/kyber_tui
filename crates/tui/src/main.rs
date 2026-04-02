@@ -12,7 +12,6 @@ async fn main() {
     };
     let client = reqwest::Client::new();
 
-
     let response: ExchangeResponse = client
         .post("http://localhost:3000/exchange")
         .json(&request)
@@ -22,6 +21,6 @@ async fn main() {
         .json()
         .await
         .unwrap();
-    
+
     println!("{:?}", response);
 }

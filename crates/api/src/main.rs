@@ -1,23 +1,23 @@
-mod ports;
-mod domain;
 mod adapters;
+mod domain;
+mod ports;
 
-use axum::{routing::{get, post}, Router};
-use domain::exchange::exchange;
+use crate::adapters::drivers::create_portal;
+use crate::adapters::services::cache::create_cache;
+use crate::domain::Application;
+use crate::ports::drivers::portal::Portal;
 
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::fmt::init();
+    let cache = create_cache();
+    let application = Application::new(cache);
 
-    let app = Router::new()
-        .route("/", get(ready))
-        .route("/exchange", post(exchange));
+    let portal = create_portal(application, Some("0.0.0.0:3000"))
+        .await
+        .add_health_check_route()
+        .await
+        .add_exchange_route()
+        .await;
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    portal.run().await;
 }
-
-async fn ready() -> &'static str {
-    "Ready"
-}
-
