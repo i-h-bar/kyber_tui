@@ -63,7 +63,7 @@ where
     }
 
     async fn add_exchange_route(mut self) -> Self {
-        self.router = std::mem::take(&mut self.router).route(
+        self.router = self.router.route(
             "/exchange",
             post({
                 let app = Arc::clone(&self.application);
