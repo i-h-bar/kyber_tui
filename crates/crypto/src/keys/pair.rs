@@ -23,7 +23,8 @@ pub struct EncryptedMessage {
 }
 
 impl EncryptedMessage {
-    /// Serialize to bytes: [kyber: 768][nonce: 12][signed_ciphertext: rest]
+    /// Serialize to bytes: [kyber: 768][nonce: 12][`signed_ciphertext`: rest]
+    #[must_use]
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(768 + 12 + self.signed_ciphertext.len());
         buf.extend_from_slice(&self.kyber_ciphertext);
@@ -44,6 +45,7 @@ impl EncryptedMessage {
         })
     }
 
+    #[must_use]
     pub fn to_b64(&self) -> String {
         STANDARD.encode(self.to_bytes())
     }

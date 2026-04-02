@@ -4,13 +4,13 @@ use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CachedSession {
-    pub session_id: Uuid,
+    pub id: Uuid,
     pub client_public_key: String,
 }
 
 #[async_trait]
 pub trait Cache {
     fn create() -> Self;
-    async fn save_session(self, session: CachedSession);
-    async fn load_session(self) -> CachedSession;
+    async fn save_session(&self, session: &CachedSession);
+    async fn load_session(&self) -> CachedSession;
 }

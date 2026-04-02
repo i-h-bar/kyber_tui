@@ -6,6 +6,9 @@ members =[
 ]
 resolver = "2"
 
+[workspace.lints.clippy]
+pedantic = "warn"
+
 [workspace.dependencies]
 kyber_crypto = { path="crates/crypto" }
 contracts = { path="crates/contracts" }

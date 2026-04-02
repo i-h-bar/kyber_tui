@@ -3,6 +3,9 @@ name = "kyber_crypto"
 version = "0.1.0"
 edition = "2024"
 
+[lints]
+workspace = true
+
 [dependencies]
 aes-gcm = "0.10"
 pqc_kyber = {version = "0.7.1", features = ["kyber512", "90s", "avx2"]}

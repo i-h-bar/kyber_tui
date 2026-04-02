@@ -1,4 +1,3 @@
-use crate::ports::drivers::portal::Portal;
 use crate::ports::services::cache::Cache;
 
 pub mod routes;

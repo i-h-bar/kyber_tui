@@ -3,7 +3,6 @@ use uuid::Uuid;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ExchangeRequest {
-    pub session_id: Uuid,
     pub pub_key: String,
 }
 

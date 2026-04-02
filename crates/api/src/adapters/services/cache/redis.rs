@@ -15,11 +15,11 @@ impl Cache for RedisCache {
             client: Client::open("redis://127.0.0.1/").unwrap(),
         }
     }
-    async fn save_session(self, session: CachedSession) {
+    async fn save_session(&self, session: &CachedSession) {
         todo!()
     }
 
-    async fn load_session(self) -> CachedSession {
+    async fn load_session(&self) -> CachedSession {
         todo!()
     }
 }

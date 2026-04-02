@@ -6,6 +6,7 @@ pub struct Secret {
 }
 
 impl Secret {
+    #[must_use]
     pub fn new(kem: [u8; 1632], signing: SecretKey) -> Secret {
         Self { kem, signing }
     }

@@ -8,7 +8,7 @@ where
     C: Cache + Send + Sync,
 {
     async fn new(application: Application<C>, bind_addr: Option<&str>) -> Self;
-    async fn add_health_check_route(mut self) -> Self;
-    async fn add_exchange_route(mut self) -> Self;
+    fn add_health_check_route(self) -> Self;
+    fn add_exchange_route(self) -> Self;
     async fn run(self);
 }

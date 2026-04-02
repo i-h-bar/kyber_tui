@@ -50,7 +50,7 @@ where
         }
     }
 
-    async fn add_health_check_route(mut self) -> Self {
+    fn add_health_check_route(mut self) -> Self {
         self.router = self.router.route(
             "/ready",
             get({
@@ -62,7 +62,7 @@ where
         self
     }
 
-    async fn add_exchange_route(mut self) -> Self {
+    fn add_exchange_route(mut self) -> Self {
         self.router = self.router.route(
             "/exchange",
             post({

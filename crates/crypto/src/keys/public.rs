@@ -9,6 +9,7 @@ pub struct Public {
 }
 
 impl Public {
+    #[must_use]
     pub fn new(kem: [u8; 800], signing: SignPublicKey) -> Public {
         Self { kem, signing }
     }
@@ -24,11 +25,11 @@ impl Public {
     }
 
     pub fn from_b64(base64: &str) -> Result<Public, KeyError> {
-        Ok(Self::from_bytes(
+        Self::from_bytes(
             &STANDARD
                 .decode(base64)
                 .map_err(|_| KeyError::DeserializationFailed)?,
-        )?)
+        )
     }
 
     #[must_use]
@@ -41,6 +42,7 @@ impl Public {
         &self.signing
     }
 
+    #[must_use]
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut buff = Vec::with_capacity(832);
         buff.extend_from_slice(&self.kem);
@@ -49,6 +51,7 @@ impl Public {
         buff
     }
 
+    #[must_use]
     pub fn to_b64(&self) -> String {
         STANDARD.encode(self.to_bytes())
     }
