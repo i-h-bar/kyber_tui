@@ -1,9 +1,9 @@
-use std::sync::Arc;
-use axum::Json;
 use crate::domain::Application;
+use crate::ports::services::cache::Cache;
+use axum::Json;
 use contracts::exchange::{ExchangeRequest, ExchangeResponse};
 use http::StatusCode;
-use crate::ports::services::cache::Cache;
+use std::sync::Arc;
 
 pub async fn run<C>(
     app: Arc<Application<C>>,

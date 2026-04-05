@@ -1,12 +1,10 @@
+use crate::adapters::drivers::portal::axum::routes::exchange;
 use crate::domain::Application;
 use crate::ports::drivers::portal::Portal;
 use crate::ports::services::cache::Cache;
-use crate::adapters::drivers::portal::axum::routes::exchange;
 use async_trait::async_trait;
 use axum::routing::{get, post};
-use axum::{Json, Router};
-use contracts::exchange::{ExchangeRequest, ExchangeResponse};
-use http::StatusCode;
+use axum::Router;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
@@ -28,12 +26,10 @@ where
     app.health().await;
 }
 
-
-
 #[async_trait]
 impl<C> Portal<C> for AxumPortal<C>
 where
-    C: Cache + Send + Sync
+    C: Cache + Send + Sync,
 {
     async fn new(application: Application<C>, bind_addr: Option<&str>) -> Self {
         Self {
@@ -62,7 +58,7 @@ where
             "/exchange",
             post({
                 let app = Arc::clone(&self.application);
-                move | payload | exchange::run(app, payload)
+                move |payload| exchange::run(app, payload)
             }),
         );
 

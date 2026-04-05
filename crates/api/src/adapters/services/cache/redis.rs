@@ -1,4 +1,4 @@
-use crate::ports::services::cache::{Cache, CachedSession};
+use crate::ports::services::cache::{Cache, CacheError, CachedSession};
 use async_trait::async_trait;
 use redis::Client;
 use std::env;
@@ -17,11 +17,11 @@ impl Cache for RedisCache {
             client: Client::open(url).unwrap(),
         }
     }
-    async fn save_session(&self, session: &CachedSession) {
+    async fn save_session(&self, session: &CachedSession) -> Result<(), CacheError> {
         todo!()
     }
 
-    async fn load_session(&self) -> CachedSession {
+    async fn load_session(&self) -> Result<CachedSession, CacheError> {
         todo!()
     }
 }

@@ -1,7 +1,7 @@
 use crate::ports::services::cache::Cache;
 
-pub mod routes;
 pub mod errors;
+pub mod routes;
 
 pub struct Application<C>
 where
