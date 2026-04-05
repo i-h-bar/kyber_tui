@@ -1,4 +1,4 @@
-use crate::domain::Application;
+use crate::domain::{Application, errors::routes::exchange::ExchangeError};
 use crate::ports::services::cache::{Cache, CachedSession};
 use contracts::exchange::{ExchangeRequest, ExchangeResponse};
 use uuid::Uuid;
@@ -8,7 +8,7 @@ impl<C> Application<C>
 where
     C: Cache + Send + Sync,
 {
-    pub async fn exchange(&self, payload: ExchangeRequest) -> ExchangeResponse {
+    pub async fn exchange(&self, payload: ExchangeRequest) -> Result<ExchangeResponse, ExchangeError> {
         let _pub_key = Public::from_b64(&payload.pub_key).unwrap();
         let key_pair = KeyPair::generate().unwrap();
 
@@ -17,11 +17,11 @@ where
             client_public_key: payload.pub_key
         };
 
-        self.cache.save_session(&session).await;
+        //self.cache.save_session(&session).await;
 
-        ExchangeResponse {
+        Ok(ExchangeResponse {
             session_id: session.id,
             pub_key: key_pair.public.to_b64(),
-        }
+        })
     }
 }

@@ -28,11 +28,14 @@ where
 async fn exchange<C>(
     app: Arc<Application<C>>,
     Json(payload): Json<ExchangeRequest>,
-) -> (StatusCode, Json<ExchangeResponse>)
+) -> Result<Json<ExchangeResponse>, StatusCode>
 where
     C: Cache + Send + Sync,
 {
-    (StatusCode::OK, Json(app.exchange(payload).await))
+    match app.exchange(payload).await {
+        Ok(result) => Ok(Json(result)),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
 }
 
 #[async_trait]

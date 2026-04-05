@@ -55,6 +55,7 @@ dependencies = [
  "kyber_crypto",
  "redis",
  "serde",
+ "thiserror 2.0.18",
  "tokio",
  "tracing-subscriber",
  "uuid",
