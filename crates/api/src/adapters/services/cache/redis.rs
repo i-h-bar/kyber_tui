@@ -1,6 +1,6 @@
 use crate::ports::services::cache::{Cache, CacheError, CachedSession};
 use async_trait::async_trait;
-use redis::Client;
+use redis::{AsyncCommands, Client};
 use std::env;
 
 pub struct RedisCache {
@@ -18,7 +18,10 @@ impl Cache for RedisCache {
         }
     }
     async fn save_session(&self, session: &CachedSession) -> Result<(), CacheError> {
-        todo!()
+        let session_str = serde_json::to_string(&session).map_err(|_| CacheError::SaveError)?;
+        self.client.get_multiplexed_async_connection().await.unwrap().set::<String, String, ()>(session.id.into(), session_str).await.unwrap();
+
+        Ok(())
     }
 
     async fn load_session(&self) -> Result<CachedSession, CacheError> {
