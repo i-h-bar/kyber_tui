@@ -1,6 +1,7 @@
 use crate::domain::Application;
 use crate::ports::drivers::portal::Portal;
 use crate::ports::services::cache::Cache;
+use crate::adapters::drivers::portal::axum::routes::exchange;
 use async_trait::async_trait;
 use axum::routing::{get, post};
 use axum::{Json, Router};
@@ -8,6 +9,8 @@ use contracts::exchange::{ExchangeRequest, ExchangeResponse};
 use http::StatusCode;
 use std::sync::Arc;
 use tokio::net::TcpListener;
+
+pub mod routes;
 
 pub struct AxumPortal<C>
 where
@@ -25,18 +28,7 @@ where
     app.health().await;
 }
 
-async fn exchange<C>(
-    app: Arc<Application<C>>,
-    Json(payload): Json<ExchangeRequest>,
-) -> Result<Json<ExchangeResponse>, StatusCode>
-where
-    C: Cache + Send + Sync,
-{
-    match app.exchange(payload).await {
-        Ok(result) => Ok(Json(result)),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
-    }
-}
+
 
 #[async_trait]
 impl<C> Portal<C> for AxumPortal<C>
@@ -70,7 +62,7 @@ where
             "/exchange",
             post({
                 let app = Arc::clone(&self.application);
-                move | payload | exchange(app, payload)
+                move | payload | exchange::run(app, payload)
             }),
         );
 
