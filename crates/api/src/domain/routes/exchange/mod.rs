@@ -12,15 +12,18 @@ where
         &self,
         payload: ExchangeRequest,
     ) -> Result<ExchangeResponse, ExchangeError> {
-        let _pub_key = Public::from_b64(&payload.pub_key).unwrap();
-        let key_pair = KeyPair::generate().unwrap();
+        if let Err(_) = Public::from_b64(&payload.pub_key) {
+            return Err(ExchangeError::InvalidPublicKey);
+        };
+
+        let key_pair = KeyPair::generate().map_err(|_| ExchangeError::KeyGenError)?;
 
         let session = CachedSession {
             id: Uuid::new_v4(),
             client_public_key: payload.pub_key,
         };
 
-        self.cache.save_session(&session).await;
+        self.cache.save_session(&session).await.map_err(|_| ExchangeError::CacheError)?;
 
         Ok(ExchangeResponse {
             session_id: session.id,
