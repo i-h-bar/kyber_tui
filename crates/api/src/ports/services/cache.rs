@@ -3,14 +3,16 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
 
-
 #[derive(Error, Debug)]
 pub enum CacheError {
+    #[error("Error Creating Connection")]
+    ConnectionError,
+
     #[error("Error Saving the Session")]
     SaveError,
-    
-    #[error("Error Retrieving the Session")]
-    LoadError,
+
+    #[error("{0}")]
+    LoadError(String),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -23,5 +25,5 @@ pub struct CachedSession {
 pub trait Cache {
     fn create() -> Self;
     async fn save_session(&self, session: &CachedSession) -> Result<(), CacheError>;
-    async fn load_session(&self) -> Result<CachedSession, CacheError>;
+    async fn load_session(&self, session_id: String) -> Result<CachedSession, CacheError>;
 }

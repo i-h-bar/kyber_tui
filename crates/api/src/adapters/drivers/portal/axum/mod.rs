@@ -3,8 +3,8 @@ use crate::domain::Application;
 use crate::ports::drivers::portal::Portal;
 use crate::ports::services::cache::Cache;
 use async_trait::async_trait;
-use axum::routing::{get, post};
 use axum::Router;
+use axum::routing::{get, post};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
