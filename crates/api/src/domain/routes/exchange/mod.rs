@@ -1,3 +1,5 @@
+use std::ops::Add;
+use std::time::{Duration, SystemTime};
 use crate::domain::{Application, errors::routes::exchange::ExchangeError};
 use crate::ports::services::cache::{Cache, CachedSession};
 use contracts::exchange::{ExchangeRequest, ExchangeResponse};
@@ -21,6 +23,7 @@ where
         let session = CachedSession {
             id: Uuid::new_v4(),
             client_public_key: payload.pub_key,
+            expiry: SystemTime::now().add(Duration::from_secs(30))
         };
 
         self.cache.save_session(&session).await.map_err(|_| ExchangeError::CacheError)?;
