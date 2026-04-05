@@ -20,8 +20,7 @@ impl Cache for RedisCache {
     }
     async fn save_session(&self, session: &CachedSession) -> Result<(), CacheError> {
         let session_str = serde_json::to_string(&session).map_err(|_| CacheError::SaveError)?;
-        self
-            .get_connection()
+        self.get_connection()
             .await?
             .set_options::<String, String, ()>(
                 session.id.into(),
