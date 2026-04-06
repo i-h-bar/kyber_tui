@@ -21,6 +21,7 @@ pub struct CachedSession {
     pub id: Uuid,
     pub client_public_key: String,
     pub expiry: SystemTime,
+    pub user_id: Option<Uuid>,
 }
 
 #[async_trait]

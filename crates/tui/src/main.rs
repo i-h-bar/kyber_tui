@@ -1,5 +1,8 @@
 use contracts::exchange::{ExchangeRequest, ExchangeResponse};
+use contracts::token::Token;
 use kyber_crypto::keys::KeyPair;
+use kyber_crypto::keys::pair::EncryptedMessage;
+use kyber_crypto::keys::public::Public;
 
 #[tokio::main]
 async fn main() {
@@ -19,6 +22,11 @@ async fn main() {
         .json()
         .await
         .unwrap();
-
-    println!("{response:#?}");
+    
+    let server_pub_key = Public::from_b64(&response.public_key).unwrap();
+    let encrypted_message = EncryptedMessage::from_b64(&response.token).unwrap();
+    let message = key_pair.decrypt(&encrypted_message, &server_pub_key).unwrap();
+    let token = Token::from_bytes(&message);
+    
+    println!("{token:?}");
 }

@@ -3,6 +3,7 @@ use base64::{Engine, engine::general_purpose::STANDARD};
 use pqcrypto_sphincsplus::sphincsshake128fsimple::PublicKey as SignPublicKey;
 use pqcrypto_traits::sign::PublicKey;
 
+#[derive(Clone, Debug)]
 pub struct Public {
     kem: [u8; 800],
     signing: SignPublicKey,

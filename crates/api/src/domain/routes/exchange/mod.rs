@@ -1,10 +1,11 @@
 use std::ops::Add;
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use crate::domain::{Application, errors::routes::exchange::ExchangeError};
 use crate::ports::services::cache::{Cache, CachedSession};
 use contracts::exchange::{ExchangeRequest, ExchangeResponse};
 use kyber_crypto::keys::{pair::KeyPair, public::Public};
 use uuid::Uuid;
+use contracts::token::Token;
 
 impl<C> Application<C>
 where
@@ -14,23 +15,32 @@ where
         &self,
         payload: ExchangeRequest,
     ) -> Result<ExchangeResponse, ExchangeError> {
-        if let Err(_) = Public::from_b64(&payload.pub_key) {
-            return Err(ExchangeError::InvalidPublicKey);
-        };
+        let client_pub_key = Public::from_b64(&payload.pub_key).map_err(|_| ExchangeError::InvalidPublicKey)?;
 
         let key_pair = KeyPair::generate().map_err(|_| ExchangeError::KeyGenError)?;
 
         let session = CachedSession {
             id: Uuid::new_v4(),
             client_public_key: payload.pub_key,
-            expiry: SystemTime::now().add(Duration::from_secs(30))
+            expiry: SystemTime::now().add(Duration::from_secs(30)),
+            user_id: None,
         };
 
         self.cache.save_session(&session).await.map_err(|_| ExchangeError::CacheError)?;
 
+        let token = Token {
+            session_id: session.id,
+            pub_key: key_pair.public.clone(),
+            expiry_s: session.expiry
+                .duration_since(UNIX_EPOCH)
+                .expect("time should go forward")
+                .as_secs(),
+        };
+
         Ok(ExchangeResponse {
             session_id: session.id,
-            pub_key: key_pair.public.to_b64(),
+            public_key: key_pair.public.to_b64(),
+            token: key_pair.encrypt(&token.to_bytes(), &client_pub_key).unwrap().to_b64(),
         })
     }
 }
