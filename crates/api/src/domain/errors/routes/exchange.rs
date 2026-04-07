@@ -13,4 +13,7 @@ pub enum ExchangeError {
     
     #[error("Token creation error")]
     TokenCreationError,
+    
+    #[error("Token encryption error")]
+    TokenEncryptionError,
 }

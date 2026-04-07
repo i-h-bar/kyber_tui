@@ -47,7 +47,7 @@ where
             public_key: key_pair.public.to_b64(),
             token: key_pair
                 .encrypt(&token.to_bytes(), &client_pub_key)
-                .unwrap()
+                .map_err(|_| ExchangeError::TokenEncryptionError )?
                 .to_b64(),
         })
     }
