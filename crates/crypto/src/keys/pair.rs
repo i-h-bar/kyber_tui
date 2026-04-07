@@ -107,6 +107,26 @@ impl KeyPair {
             .map_err(|_| KeyError::DecryptionFailed)
     }
 
+    /// Verify this key pair signed the message
+    pub fn verify(&self, msg: &EncryptedMessage) -> bool {
+        let signed_message = match SignedMessage::from_bytes(&msg.signed_ciphertext) {
+            Ok(signed_message) => signed_message,
+            Err(_) => return false,
+        };
+        match sphincsshake128fsimple::open(&signed_message, self.public.signing()) {
+            Ok(_) => true,
+            Err(_) => false,
+        }
+    }
+
+    pub fn verify_b64(&self, msg: &str) -> bool {
+        let message = match EncryptedMessage::from_b64(msg) {
+            Ok(message) => message,
+            Err(_) => return false,
+        };
+        self.verify(&message)
+    }
+
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut buff = Vec::new();
         buff.extend_from_slice(&self.public.to_bytes());

@@ -2,6 +2,7 @@ use crate::adapters::drivers::portal::axum::routes::{handshake, new};
 use crate::domain::Application;
 use crate::ports::drivers::portal::Portal;
 use crate::ports::services::cache::Cache;
+use crate::ports::services::pw_store::PWStore;
 use async_trait::async_trait;
 use axum::Router;
 use axum::routing::{get, post};
@@ -10,28 +11,31 @@ use tokio::net::TcpListener;
 
 pub mod routes;
 
-pub struct AxumPortal<C>
+pub struct AxumPortal<C, PW>
 where
     C: Cache + Send + Sync + 'static,
+    PW: PWStore + Send + Sync + 'static,
 {
-    application: Arc<Application<C>>,
+    application: Arc<Application<C, PW>>,
     router: Router,
     listener: TcpListener,
 }
 
-async fn health<C>(app: Arc<Application<C>>)
+async fn health<C, PW>(app: Arc<Application<C, PW>>)
 where
     C: Cache + Send + Sync,
+    PW: PWStore + Send + Sync,
 {
     app.health().await;
 }
 
 #[async_trait]
-impl<C> Portal<C> for AxumPortal<C>
+impl<C, PW> Portal<C, PW> for AxumPortal<C, PW>
 where
     C: Cache + Send + Sync,
+    PW: PWStore + Send + Sync,
 {
-    async fn new(application: Application<C>, bind_addr: Option<&str>) -> Self {
+    async fn new(application: Application<C, PW>, bind_addr: Option<&str>) -> Self {
         Self {
             application: Arc::new(application),
             router: Router::new(),

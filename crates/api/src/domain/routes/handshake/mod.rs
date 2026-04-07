@@ -1,5 +1,6 @@
 use crate::domain::{Application, errors::routes::handshake::HandshakeError};
 use crate::ports::services::cache::{Cache, CachedSession};
+use crate::ports::services::pw_store::PWStore;
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
 use contracts::token::PreAuthToken;
 use kyber_crypto::keys::pair::KeyPair;
@@ -8,9 +9,10 @@ use std::ops::Add;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 
-impl<C> Application<C>
+impl<C, PW> Application<C, PW>
 where
     C: Cache + Send + Sync,
+    PW: PWStore + Send + Sync,
 {
     pub async fn handshake(
         &self,

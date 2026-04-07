@@ -4,4 +4,7 @@ use thiserror::Error;
 pub enum NewUserError {
     #[error("Deserialisation error")]
     DeserialisationError,
+
+    #[error("Permission denied")]
+    PermissionDenied,
 }

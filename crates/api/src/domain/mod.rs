@@ -1,20 +1,30 @@
 use crate::ports::services::cache::Cache;
+use crate::ports::services::pw_store::PWStore;
+use std::env;
 
 pub mod errors;
 pub mod routes;
 
-pub struct Application<C>
+pub struct Application<C, PW>
 where
     C: Cache + Send + Sync,
+    PW: PWStore + Send + Sync,
 {
     cache: C,
+    pw_store: PW,
+    salt: String,
 }
 
-impl<C> Application<C>
+impl<C, PW> Application<C, PW>
 where
     C: Cache + Send + Sync,
+    PW: PWStore + Send + Sync,
 {
-    pub(crate) fn new(cache: C) -> Self {
-        Self { cache }
+    pub(crate) fn new(cache: C, pw_store: PW) -> Self {
+        Self {
+            cache,
+            pw_store,
+            salt: env::var("API_SALT").expect("SMTP_SALT env var").into(),
+        }
     }
 }

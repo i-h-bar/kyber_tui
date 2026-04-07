@@ -29,5 +29,5 @@ pub struct CachedSession {
 pub trait Cache {
     fn create() -> Self;
     async fn save_session(&self, session: &CachedSession) -> Result<(), CacheError>;
-    async fn load_session(&self, session_id: String) -> Result<CachedSession, CacheError>;
+    async fn load_session(&self, session_id: &Uuid) -> Result<CachedSession, CacheError>;
 }

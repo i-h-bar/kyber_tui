@@ -1,16 +1,18 @@
-use std::sync::Arc;
-use axum::Json;
-use http::StatusCode;
-use contracts::{GenericRequest, GenericResponse};
 use crate::domain::Application;
 use crate::ports::services::cache::Cache;
+use crate::ports::services::pw_store::PWStore;
+use axum::Json;
+use contracts::{GenericRequest, GenericResponse};
+use http::StatusCode;
+use std::sync::Arc;
 
-pub async fn run<C>(
-    app: Arc<Application<C>>,
+pub async fn run<C, PW>(
+    app: Arc<Application<C, PW>>,
     Json(payload): Json<GenericRequest>,
 ) -> Result<Json<GenericResponse>, StatusCode>
 where
     C: Cache + Send + Sync,
+    PW: PWStore + Send + Sync,
 {
     match app.create_user(payload).await {
         Ok(result) => Ok(Json(result)),

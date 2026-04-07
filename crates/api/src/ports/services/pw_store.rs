@@ -8,8 +8,8 @@ pub enum PWStoreError {
     UserCreationError,
 }
 
-
 pub struct CreateUser {
+    pub id: Uuid,
     pub username: String,
     pub hashed_pw: String,
 }

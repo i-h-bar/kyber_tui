@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use redis::aio::MultiplexedConnection;
 use redis::{AsyncCommands, Client, SetExpiry, SetOptions};
 use std::env;
+use uuid::Uuid;
 
 pub struct RedisCache {
     client: Client,
@@ -23,7 +24,7 @@ impl Cache for RedisCache {
         self.get_connection()
             .await?
             .set_options::<String, String, ()>(
-                session.id.into(),
+                session.id.to_string(),
                 session_str,
                 SetOptions::default().with_expiration(SetExpiry::EX(60)),
             )
@@ -33,12 +34,12 @@ impl Cache for RedisCache {
         Ok(())
     }
 
-    async fn load_session(&self, session_id: String) -> Result<CachedSession, CacheError> {
+    async fn load_session(&self, session_id: &Uuid) -> Result<CachedSession, CacheError> {
         Ok(serde_json::from_str(
             &self
                 .get_connection()
                 .await?
-                .get::<String, String>(session_id)
+                .get::<String, String>((*session_id).into())
                 .await
                 .map_err(|_| CacheError::LoadError("Error fetching session".to_string()))?,
         )

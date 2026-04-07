@@ -56,11 +56,11 @@ dependencies = [
  "argon2",
  "async-trait",
  "axum",
+ "base64",
  "contracts",
  "dotenv",
  "http",
  "kyber_crypto",
- "kyber_tui",
  "redis",
  "serde",
  "serde_json",
@@ -347,6 +347,7 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "serde",
+ "serde_json",
  "uuid",
 ]
 
@@ -1151,6 +1152,7 @@ name = "kyber_tui"
 version = "0.1.0"
 dependencies = [
  "contracts",
+ "dotenv",
  "kyber_crypto",
  "reqwest",
  "tokio",

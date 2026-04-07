@@ -2,9 +2,8 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 pub mod handshake;
-pub mod token;
 pub mod new_user;
-
+pub mod token;
 
 #[derive(Serialize, Deserialize)]
 pub struct GenericRequest {
@@ -12,7 +11,6 @@ pub struct GenericRequest {
     pub body: String,
     pub token: String,
 }
-
 
 #[derive(Serialize, Deserialize)]
 pub struct GenericResponse {
