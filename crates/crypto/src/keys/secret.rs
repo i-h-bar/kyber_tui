@@ -33,7 +33,7 @@ impl Secret {
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, KeyError> {
         if bytes.len() != 1696 {
-            return Err(KeyError::GenerationFailed);
+            return Err(KeyError::DeserialisationFailed);
         }
 
         Ok(Self {

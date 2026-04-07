@@ -2,7 +2,8 @@ use crate::domain::{Application, errors::routes::exchange::ExchangeError};
 use crate::ports::services::cache::{Cache, CachedSession};
 use contracts::exchange::{ExchangeRequest, ExchangeResponse};
 use contracts::token::Token;
-use kyber_crypto::keys::{pair::KeyPair, public::Public};
+use kyber_crypto::keys::pair::KeyPair;
+use kyber_crypto::keys::public::Public;
 use std::ops::Add;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
@@ -47,7 +48,7 @@ where
             public_key: key_pair.public.to_b64(),
             token: key_pair
                 .encrypt(&token.to_bytes(), &client_pub_key)
-                .map_err(|_| ExchangeError::TokenEncryptionError )?
+                .map_err(|_| ExchangeError::TokenEncryptionError)?
                 .to_b64(),
         })
     }

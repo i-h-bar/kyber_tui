@@ -10,10 +10,10 @@ pub enum ExchangeError {
 
     #[error("Key generation error")]
     KeyGenError,
-    
+
     #[error("Token creation error")]
     TokenCreationError,
-    
+
     #[error("Token encryption error")]
     TokenEncryptionError,
 }

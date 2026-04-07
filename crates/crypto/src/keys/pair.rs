@@ -1,67 +1,15 @@
 use crate::keys::public::Public;
 use crate::keys::secret::Secret;
-use aes_gcm::{
-    Aes256Gcm, Nonce,
-    aead::{Aead, KeyInit},
-};
-use base64::{Engine, engine::general_purpose::STANDARD};
+use crate::message::EncryptedMessage;
+use aes_gcm::aead::rand_core::RngCore;
+use aes_gcm::aead::{Aead, OsRng};
+use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD;
 use pqc_kyber::{decapsulate, encapsulate, keypair};
-use pqcrypto_sphincsplus::sphincsshake128fsimple::{self, SignedMessage};
-use pqcrypto_traits::sign::SignedMessage as SignedMessageTrait;
-use rand::RngCore;
-use rand::rngs::OsRng;
+use pqcrypto_sphincsplus::sphincsshake128fsimple;
+use pqcrypto_traits::sign::SignedMessage;
 use thiserror::Error;
-
-/// All data transmitted from sender to recipient.
-pub struct EncryptedMessage {
-    /// Kyber KEM ciphertext — lets the recipient recover the shared secret.
-    pub kyber_ciphertext: [u8; 768],
-    /// AES-GCM nonce.
-    pub nonce: [u8; 12],
-    /// SPHINCS+ signed message containing the AES ciphertext; verifies authenticity.
-    pub signed_ciphertext: Vec<u8>,
-}
-
-impl EncryptedMessage {
-    /// Serialize to bytes: [kyber: 768][nonce: 12][`signed_ciphertext`: rest]
-    #[must_use]
-    pub fn to_bytes(&self) -> Vec<u8> {
-        let mut buf = Vec::with_capacity(768 + 12 + self.signed_ciphertext.len());
-        buf.extend_from_slice(&self.kyber_ciphertext);
-        buf.extend_from_slice(&self.nonce);
-        buf.extend_from_slice(&self.signed_ciphertext);
-        buf
-    }
-
-    /// Deserialize from bytes produced by `to_bytes`.
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self, KeyError> {
-        if bytes.len() < 768 + 12 {
-            return Err(KeyError::DeserializationFailed);
-        }
-        Ok(EncryptedMessage {
-            kyber_ciphertext: bytes[..768].try_into().unwrap(),
-            nonce: bytes[768..780].try_into().unwrap(),
-            signed_ciphertext: bytes[780..].to_vec(),
-        })
-    }
-
-    #[must_use]
-    pub fn to_b64(&self) -> String {
-        STANDARD.encode(self.to_bytes())
-    }
-
-    pub fn from_b64(s: &str) -> Result<Self, KeyError> {
-        let bytes = STANDARD
-            .decode(s)
-            .map_err(|_| KeyError::DeserializationFailed)?;
-        Self::from_bytes(&bytes)
-    }
-}
-
-pub struct KeyPair {
-    pub public: Public,
-    secret: Secret,
-}
 
 #[derive(Error, Debug)]
 pub enum KeyError {
@@ -78,7 +26,12 @@ pub enum KeyError {
     #[error("signature verification failed")]
     VerificationFailed,
     #[error("deserialization failed")]
-    DeserializationFailed,
+    DeserialisationFailed,
+}
+
+pub struct KeyPair {
+    pub public: Public,
+    secret: Secret,
 }
 
 impl KeyPair {
@@ -101,10 +54,10 @@ impl KeyPair {
         recipient: &Public,
     ) -> Result<EncryptedMessage, KeyError> {
         let mut rng = OsRng;
-        
+
         let (kyber_ciphertext, shared_secret) =
             encapsulate(recipient.kem(), &mut rng).map_err(|_| KeyError::EncapsulationFailed)?;
-        
+
         let cipher =
             Aes256Gcm::new_from_slice(&shared_secret).map_err(|_| KeyError::EncryptionFailed)?;
         let mut nonce = [0u8; 12];
@@ -112,7 +65,7 @@ impl KeyPair {
         let aes_ciphertext = cipher
             .encrypt(Nonce::from_slice(&nonce), plaintext)
             .map_err(|_| KeyError::EncryptionFailed)?;
-        
+
         let signed_ciphertext =
             sphincsshake128fsimple::sign(&aes_ciphertext, self.secret.signing())
                 .as_bytes()
@@ -130,20 +83,23 @@ impl KeyPair {
     }
 
     pub fn decrypt_b64(&self, msg: &str, sender: &Public) -> Result<String, KeyError> {
-        String::from_utf8(self.decrypt(&EncryptedMessage::from_b64(msg)?, sender)?)
-            .map_err(|_| KeyError::DeserializationFailed)
+        String::from_utf8(self.decrypt(
+            &EncryptedMessage::from_b64(msg).map_err(|_| KeyError::DeserialisationFailed)?,
+            sender,
+        )?)
+        .map_err(|_| KeyError::DeserialisationFailed)
     }
 
     /// Decrypt an `EncryptedMessage`, verifying it was signed by `sender`.
     pub fn decrypt(&self, msg: &EncryptedMessage, sender: &Public) -> Result<Vec<u8>, KeyError> {
         let signed_message = SignedMessage::from_bytes(&msg.signed_ciphertext)
-            .map_err(|_| KeyError::DeserializationFailed)?;
+            .map_err(|_| KeyError::DeserialisationFailed)?;
         let aes_ciphertext = sphincsshake128fsimple::open(&signed_message, sender.signing())
             .map_err(|_| KeyError::VerificationFailed)?;
-        
+
         let shared_secret = decapsulate(&msg.kyber_ciphertext, self.secret.kem())
             .map_err(|_| KeyError::DecapsulationFailed)?;
-        
+
         let cipher =
             Aes256Gcm::new_from_slice(&shared_secret).map_err(|_| KeyError::DecryptionFailed)?;
         cipher
@@ -161,7 +117,7 @@ impl KeyPair {
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, KeyError> {
         if bytes.len() != 2528 {
-            return Err(KeyError::DeserializationFailed);
+            return Err(KeyError::DeserialisationFailed);
         }
 
         Ok(Self {
@@ -178,7 +134,7 @@ impl KeyPair {
         Ok(Self::from_bytes(
             &STANDARD
                 .decode(base64)
-                .map_err(|_| KeyError::DeserializationFailed)?,
+                .map_err(|_| KeyError::DeserialisationFailed)?,
         )?)
     }
 }

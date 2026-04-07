@@ -18,9 +18,9 @@ impl Public {
     pub fn from_bytes(bytes: &[u8]) -> Result<Public, KeyError> {
         let kem: [u8; 800] = bytes[..800]
             .try_into()
-            .map_err(|_| KeyError::DeserializationFailed)?;
+            .map_err(|_| KeyError::DeserialisationFailed)?;
         let signing = SignPublicKey::from_bytes(&bytes[800..])
-            .map_err(|_| KeyError::DeserializationFailed)?;
+            .map_err(|_| KeyError::DeserialisationFailed)?;
 
         Ok(Public { kem, signing })
     }
@@ -29,7 +29,7 @@ impl Public {
         Self::from_bytes(
             &STANDARD
                 .decode(base64)
-                .map_err(|_| KeyError::DeserializationFailed)?,
+                .map_err(|_| KeyError::DeserialisationFailed)?,
         )
     }
 
