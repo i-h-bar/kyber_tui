@@ -1,1 +1,2 @@
 mod psql;
+mod queries;

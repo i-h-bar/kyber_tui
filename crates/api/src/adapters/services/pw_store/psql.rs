@@ -1,8 +1,10 @@
-use std::env;
+use crate::ports::services::pw_store::{CreateUser, PWStore, PWStoreError};
 use async_trait::async_trait;
-use sqlx::Pool;
+use sqlx::{Pool, Row};
 use sqlx::postgres::PgPoolOptions;
-use crate::ports::services::pw_store::{PWStore, PWStoreError};
+use std::env;
+use uuid::Uuid;
+use crate::adapters::services::pw_store::queries::CREATE_USER;
 
 struct Postgres {
     pool: Pool<sqlx::Postgres>,
@@ -26,7 +28,14 @@ impl PWStore for Postgres {
         Self { pool }
     }
 
-    async fn create_user(&self) -> Result<(), PWStoreError> {
-        todo!()
+    async fn create_user(&self, user_info: CreateUser) -> Result<Uuid, PWStoreError> {
+        match sqlx::query(CREATE_USER)
+            .bind(user_info.username)
+            .bind(user_info.hashed_pw)
+            .fetch_one(&self.pool)
+            .await  {
+            Ok(row) => Ok(row.get::<Uuid, &str>("id")),
+            Err(err) => Err(PWStoreError::UserCreationError),
+        }
     }
 }
