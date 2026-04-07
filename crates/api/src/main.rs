@@ -18,7 +18,7 @@ async fn main() {
     let portal = create_portal(application, Some("0.0.0.0:3000"))
         .await
         .add_health_check_route()
-        .add_exchange_route();
+        .add_handshake_route();
 
     portal.run().await;
 }

@@ -1,6 +1,6 @@
-use crate::domain::{Application, errors::routes::exchange::ExchangeError};
+use crate::domain::{Application, errors::routes::handshake::HandshakeError};
 use crate::ports::services::cache::{Cache, CachedSession};
-use contracts::exchange::{ExchangeRequest, ExchangeResponse};
+use contracts::handshake::{HandshakeRequest, HandshakeResponse};
 use contracts::token::Token;
 use kyber_crypto::keys::pair::KeyPair;
 use kyber_crypto::keys::public::Public;
@@ -12,14 +12,14 @@ impl<C> Application<C>
 where
     C: Cache + Send + Sync,
 {
-    pub async fn exchange(
+    pub async fn handshake(
         &self,
-        payload: ExchangeRequest,
-    ) -> Result<ExchangeResponse, ExchangeError> {
+        payload: HandshakeRequest,
+    ) -> Result<HandshakeResponse, HandshakeError> {
         let client_pub_key =
-            Public::from_b64(&payload.pub_key).map_err(|_| ExchangeError::InvalidPublicKey)?;
+            Public::from_b64(&payload.pub_key).map_err(|_| HandshakeError::InvalidPublicKey)?;
 
-        let key_pair = KeyPair::generate().map_err(|_| ExchangeError::KeyGenError)?;
+        let key_pair = KeyPair::generate().map_err(|_| HandshakeError::KeyGenError)?;
 
         let session = CachedSession {
             id: Uuid::new_v4(),
@@ -32,23 +32,22 @@ where
         self.cache
             .save_session(&session)
             .await
-            .map_err(|_| ExchangeError::CacheError)?;
+            .map_err(|_| HandshakeError::CacheError)?;
 
         let token = Token {
             session_id: session.id,
-            pub_key: key_pair.public.clone(),
             expiry_s: session
                 .expiry
                 .duration_since(UNIX_EPOCH)
-                .map_err(|_| ExchangeError::TokenCreationError)?
+                .map_err(|_| HandshakeError::TokenCreationError)?
                 .as_secs(),
         };
 
-        Ok(ExchangeResponse {
+        Ok(HandshakeResponse {
             public_key: key_pair.public.to_b64(),
             token: key_pair
                 .encrypt(&token.to_bytes(), &client_pub_key)
-                .map_err(|_| ExchangeError::TokenEncryptionError)?
+                .map_err(|_| HandshakeError::TokenEncryptionError)?
                 .to_b64(),
         })
     }

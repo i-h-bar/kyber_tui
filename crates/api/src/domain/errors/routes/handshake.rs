@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum ExchangeError {
+pub enum HandshakeError {
     #[error("Cache save error")]
     CacheError,
 

@@ -1,4 +1,4 @@
-use crate::adapters::drivers::portal::axum::routes::exchange;
+use crate::adapters::drivers::portal::axum::routes::handshake;
 use crate::domain::Application;
 use crate::ports::drivers::portal::Portal;
 use crate::ports::services::cache::Cache;
@@ -53,12 +53,12 @@ where
         self
     }
 
-    fn add_exchange_route(mut self) -> Self {
+    fn add_handshake_route(mut self) -> Self {
         self.router = self.router.route(
-            "/exchange",
+            "/handshake",
             post({
                 let app = Arc::clone(&self.application);
-                move |payload| exchange::run(app, payload)
+                move |payload| handshake::run(app, payload)
             }),
         );
 

@@ -286,7 +286,6 @@ name = "contracts"
 version = "0.1.0"
 dependencies = [
  "base64",
- "kyber_crypto",
  "serde",
  "uuid",
 ]

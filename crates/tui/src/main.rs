@@ -1,4 +1,4 @@
-use contracts::exchange::{ExchangeRequest, ExchangeResponse};
+use contracts::handshake::{HandshakeRequest, HandshakeResponse};
 use contracts::token::Token;
 use kyber_crypto::keys::pair::KeyPair;
 use kyber_crypto::keys::public::Public;
@@ -8,13 +8,13 @@ use kyber_crypto::message::EncryptedMessage;
 async fn main() {
     let key_pair = KeyPair::generate().unwrap();
 
-    let request = ExchangeRequest {
+    let request = HandshakeRequest {
         pub_key: key_pair.public.to_b64(),
     };
     let client = reqwest::Client::new();
 
-    let response: ExchangeResponse = client
-        .post("http://localhost:3000/exchange")
+    let response: HandshakeResponse = client
+        .post("http://localhost:3000/handshake")
         .json(&request)
         .send()
         .await
