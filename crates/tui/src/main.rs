@@ -22,11 +22,11 @@ async fn main() {
         .json()
         .await
         .unwrap();
-    
+
     let server_pub_key = Public::from_b64(&response.public_key).unwrap();
     let encrypted_message = EncryptedMessage::from_b64(&response.token).unwrap();
     let message = key_pair.decrypt(&encrypted_message, &server_pub_key).unwrap();
     let token = Token::from_bytes(&message);
-    
+
     println!("{token:?}");
 }

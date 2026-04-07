@@ -101,12 +101,10 @@ impl KeyPair {
         recipient: &Public,
     ) -> Result<EncryptedMessage, KeyError> {
         let mut rng = OsRng;
-
-        // Key exchange: encapsulate a shared secret with the recipient's KEM public key.
+        
         let (kyber_ciphertext, shared_secret) =
             encapsulate(recipient.kem(), &mut rng).map_err(|_| KeyError::EncapsulationFailed)?;
-
-        // Symmetric encryption with the shared secret.
+        
         let cipher =
             Aes256Gcm::new_from_slice(&shared_secret).map_err(|_| KeyError::EncryptionFailed)?;
         let mut nonce = [0u8; 12];
@@ -114,8 +112,7 @@ impl KeyPair {
         let aes_ciphertext = cipher
             .encrypt(Nonce::from_slice(&nonce), plaintext)
             .map_err(|_| KeyError::EncryptionFailed)?;
-
-        // Sign the ciphertext and store as raw bytes.
+        
         let signed_ciphertext =
             sphincsshake128fsimple::sign(&aes_ciphertext, self.secret.signing())
                 .as_bytes()
@@ -139,21 +136,49 @@ impl KeyPair {
 
     /// Decrypt an `EncryptedMessage`, verifying it was signed by `sender`.
     pub fn decrypt(&self, msg: &EncryptedMessage, sender: &Public) -> Result<Vec<u8>, KeyError> {
-        // Reconstruct SignedMessage from bytes; open() verifies and returns the inner AES ciphertext.
         let signed_message = SignedMessage::from_bytes(&msg.signed_ciphertext)
             .map_err(|_| KeyError::DeserializationFailed)?;
         let aes_ciphertext = sphincsshake128fsimple::open(&signed_message, sender.signing())
             .map_err(|_| KeyError::VerificationFailed)?;
-
-        // Recover the shared secret with our KEM private key.
+        
         let shared_secret = decapsulate(&msg.kyber_ciphertext, self.secret.kem())
             .map_err(|_| KeyError::DecapsulationFailed)?;
-
-        // Decrypt.
+        
         let cipher =
             Aes256Gcm::new_from_slice(&shared_secret).map_err(|_| KeyError::DecryptionFailed)?;
         cipher
             .decrypt(Nonce::from_slice(&msg.nonce), aes_ciphertext.as_ref())
             .map_err(|_| KeyError::DecryptionFailed)
+    }
+
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut buff = Vec::new();
+        buff.extend_from_slice(&self.public.to_bytes());
+        buff.extend_from_slice(&self.secret.to_bytes());
+
+        buff
+    }
+
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, KeyError> {
+        if bytes.len() != 2528 {
+            return Err(KeyError::DeserializationFailed);
+        }
+
+        Ok(Self {
+            public: Public::from_bytes(&bytes[..832])?,
+            secret: Secret::from_bytes(&bytes[832..])?,
+        })
+    }
+
+    pub fn to_b64(&self) -> String {
+        STANDARD.encode(&self.to_bytes())
+    }
+
+    pub fn from_b64(base64: &str) -> Result<Self, KeyError> {
+        Ok(Self::from_bytes(
+            &STANDARD
+                .decode(base64)
+                .map_err(|_| KeyError::DeserializationFailed)?,
+        )?)
     }
 }

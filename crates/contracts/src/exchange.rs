@@ -8,7 +8,6 @@ pub struct ExchangeRequest {
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ExchangeResponse {
-    pub session_id: Uuid,
     pub public_key: String,
     pub token: String,
 }

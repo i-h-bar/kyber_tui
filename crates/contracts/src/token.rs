@@ -1,7 +1,7 @@
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
-use uuid::Uuid;
 use kyber_crypto::keys::public::Public;
+use uuid::Uuid;
 
 #[derive(Debug)]
 pub struct Token {

@@ -1,6 +1,6 @@
-use std::time::SystemTime;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use std::time::SystemTime;
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -20,6 +20,7 @@ pub enum CacheError {
 pub struct CachedSession {
     pub id: Uuid,
     pub client_public_key: String,
+    pub server_key_pair: String,
     pub expiry: SystemTime,
     pub user_id: Option<Uuid>,
 }

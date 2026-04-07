@@ -1,11 +1,11 @@
-use std::ops::Add;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use crate::domain::{Application, errors::routes::exchange::ExchangeError};
 use crate::ports::services::cache::{Cache, CachedSession};
 use contracts::exchange::{ExchangeRequest, ExchangeResponse};
-use kyber_crypto::keys::{pair::KeyPair, public::Public};
-use uuid::Uuid;
 use contracts::token::Token;
+use kyber_crypto::keys::{pair::KeyPair, public::Public};
+use std::ops::Add;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use uuid::Uuid;
 
 impl<C> Application<C>
 where
@@ -15,32 +15,40 @@ where
         &self,
         payload: ExchangeRequest,
     ) -> Result<ExchangeResponse, ExchangeError> {
-        let client_pub_key = Public::from_b64(&payload.pub_key).map_err(|_| ExchangeError::InvalidPublicKey)?;
+        let client_pub_key =
+            Public::from_b64(&payload.pub_key).map_err(|_| ExchangeError::InvalidPublicKey)?;
 
         let key_pair = KeyPair::generate().map_err(|_| ExchangeError::KeyGenError)?;
 
         let session = CachedSession {
             id: Uuid::new_v4(),
             client_public_key: payload.pub_key,
+            server_key_pair: key_pair.to_b64(),
             expiry: SystemTime::now().add(Duration::from_secs(30)),
             user_id: None,
         };
 
-        self.cache.save_session(&session).await.map_err(|_| ExchangeError::CacheError)?;
+        self.cache
+            .save_session(&session)
+            .await
+            .map_err(|_| ExchangeError::CacheError)?;
 
         let token = Token {
             session_id: session.id,
             pub_key: key_pair.public.clone(),
-            expiry_s: session.expiry
+            expiry_s: session
+                .expiry
                 .duration_since(UNIX_EPOCH)
-                .expect("time should go forward")
+                .map_err(|_| ExchangeError::TokenCreationError)?
                 .as_secs(),
         };
 
         Ok(ExchangeResponse {
-            session_id: session.id,
             public_key: key_pair.public.to_b64(),
-            token: key_pair.encrypt(&token.to_bytes(), &client_pub_key).unwrap().to_b64(),
+            token: key_pair
+                .encrypt(&token.to_bytes(), &client_pub_key)
+                .unwrap()
+                .to_b64(),
         })
     }
 }
