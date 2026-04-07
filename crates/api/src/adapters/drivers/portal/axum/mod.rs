@@ -1,4 +1,4 @@
-use crate::adapters::drivers::portal::axum::routes::handshake;
+use crate::adapters::drivers::portal::axum::routes::{handshake, new};
 use crate::domain::Application;
 use crate::ports::drivers::portal::Portal;
 use crate::ports::services::cache::Cache;
@@ -59,6 +59,18 @@ where
             post({
                 let app = Arc::clone(&self.application);
                 move |payload| handshake::run(app, payload)
+            }),
+        );
+
+        self
+    }
+
+    fn add_new_user_route(mut self) -> Self {
+        self.router = self.router.route(
+            "/new",
+            post({
+                let app = Arc::clone(&self.application);
+                move |payload| new::run(app, payload)
             }),
         );
 

@@ -1,3 +1,3 @@
 pub mod handshake;
 pub mod health;
-mod new;
+pub mod new;

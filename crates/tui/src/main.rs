@@ -1,5 +1,5 @@
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
-use contracts::token::Token;
+use contracts::token::PreAuthToken;
 use kyber_crypto::keys::pair::KeyPair;
 use kyber_crypto::keys::public::Public;
 use kyber_crypto::message::EncryptedMessage;
@@ -28,7 +28,7 @@ async fn main() {
     let message = key_pair
         .decrypt(&encrypted_message, &server_pub_key)
         .unwrap();
-    let token = Token::from_bytes(&message);
+    let token = PreAuthToken::from_bytes(&message);
 
     println!("{token:?}");
 }

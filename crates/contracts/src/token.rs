@@ -3,12 +3,12 @@ use base64::engine::general_purpose::STANDARD;
 use uuid::Uuid;
 
 #[derive(Debug)]
-pub struct Token {
+pub struct PreAuthToken {
     pub session_id: Uuid,
     pub expiry_s: u64,
 }
 
-impl Token {
+impl PreAuthToken {
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut buff = Vec::new();
         buff.extend_from_slice(self.session_id.as_bytes());

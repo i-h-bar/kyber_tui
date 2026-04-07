@@ -35,7 +35,7 @@ impl PWStore for Postgres {
             .fetch_one(&self.pool)
             .await  {
             Ok(row) => Ok(row.get::<Uuid, &str>("id")),
-            Err(err) => Err(PWStoreError::UserCreationError),
+            Err(_) => Err(PWStoreError::UserCreationError),
         }
     }
 }

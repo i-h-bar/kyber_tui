@@ -1,7 +1,7 @@
 use crate::domain::{Application, errors::routes::handshake::HandshakeError};
 use crate::ports::services::cache::{Cache, CachedSession};
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
-use contracts::token::Token;
+use contracts::token::PreAuthToken;
 use kyber_crypto::keys::pair::KeyPair;
 use kyber_crypto::keys::public::Public;
 use std::ops::Add;
@@ -34,7 +34,7 @@ where
             .await
             .map_err(|_| HandshakeError::CacheError)?;
 
-        let token = Token {
+        let token = PreAuthToken {
             session_id: session.id,
             expiry_s: session
                 .expiry

@@ -10,5 +10,6 @@ where
     async fn new(application: Application<C>, bind_addr: Option<&str>) -> Self;
     fn add_health_check_route(self) -> Self;
     fn add_handshake_route(self) -> Self;
+    fn add_new_user_route(self) -> Self;
     async fn run(self);
 }
