@@ -12,8 +12,9 @@ use dotenv::dotenv;
 #[tokio::main]
 async fn main() {
     dotenv().ok();
+    tracing_subscriber::fmt::init();
 
-    let cache = create_cache();
+    let cache = create_cache().await;
     let pw_store = create_pw_store().await;
     let application = Application::new(cache, pw_store);
 
@@ -22,6 +23,8 @@ async fn main() {
         .add_health_check_route()
         .add_handshake_route()
         .add_new_user_route();
+
+    log::info!("Initialised");
 
     portal.run().await;
 }

@@ -3,6 +3,6 @@ use crate::ports::services::cache::Cache;
 
 pub mod redis;
 
-pub fn create_cache() -> impl Cache {
-    RedisCache::create()
+pub async fn create_cache() -> impl Cache {
+    RedisCache::create().await
 }

@@ -1,5 +1,4 @@
 use crate::domain::Application;
-use crate::domain::errors::routes::new::NewUserError;
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::{CreateUser, PWStore};
 use contracts::new_user::{NewUserRequest, NewUserResponse};
@@ -12,6 +11,7 @@ use argon2::{
     Argon2,
     password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
 };
+use crate::domain::errors::routes::DomainError;
 
 impl<C, PW> Application<C, PW>
 where
@@ -21,17 +21,11 @@ where
     pub async fn create_user(
         &self,
         request: GenericRequest,
-    ) -> Result<GenericResponse, NewUserError> {
-        let session = match self.cache.load_session(&request.session_id).await {
-            Ok(session) => session,
-            Err(err) => {
-                println!("{err:?}");
-                return Err(NewUserError::DeserialisationError);
-            }
-        };
+    ) -> Result<GenericResponse, DomainError> {
+        let session = self.cache.load_session(&request.session_id).await?;
         let key_pair = KeyPair::from_b64(&session.server_key_pair).unwrap();
         if !key_pair.verify_b64(&request.token) {
-            return Err(NewUserError::PermissionDenied);
+            return Err(DomainError::PermissionError("Permission denied".to_string()));
         }
 
         let client_public = Public::from_b64(&session.client_public_key).unwrap();

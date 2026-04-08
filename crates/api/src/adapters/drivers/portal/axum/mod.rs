@@ -10,6 +10,7 @@ use std::sync::Arc;
 use tokio::net::TcpListener;
 
 pub mod routes;
+pub mod response_codes;
 
 pub struct AxumPortal<C, PW>
 where

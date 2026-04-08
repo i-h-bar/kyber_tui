@@ -5,6 +5,7 @@ use axum::Json;
 use contracts::{GenericRequest, GenericResponse};
 use http::StatusCode;
 use std::sync::Arc;
+use crate::adapters::drivers::portal::axum::response_codes::map_domain_error;
 
 pub async fn run<C, PW>(
     app: Arc<Application<C, PW>>,
@@ -14,8 +15,9 @@ where
     C: Cache + Send + Sync,
     PW: PWStore + Send + Sync,
 {
+    log::info!("New user request");
     match app.create_user(payload).await {
         Ok(result) => Ok(Json(result)),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(error) => Err(map_domain_error(error)),
     }
 }

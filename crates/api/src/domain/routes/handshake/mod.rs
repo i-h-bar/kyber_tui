@@ -1,4 +1,3 @@
-use crate::domain::{Application, errors::routes::handshake::HandshakeError};
 use crate::ports::services::cache::{Cache, CachedSession};
 use crate::ports::services::pw_store::PWStore;
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
@@ -8,6 +7,8 @@ use kyber_crypto::keys::public::Public;
 use std::ops::Add;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
+use crate::domain::Application;
+use crate::domain::errors::routes::DomainError;
 
 impl<C, PW> Application<C, PW>
 where
@@ -17,11 +18,17 @@ where
     pub async fn handshake(
         &self,
         payload: HandshakeRequest,
-    ) -> Result<HandshakeResponse, HandshakeError> {
+    ) -> Result<HandshakeResponse, DomainError> {
         let client_pub_key =
-            Public::from_b64(&payload.pub_key).map_err(|_| HandshakeError::InvalidPublicKey)?;
+            Public::from_b64(&payload.pub_key).map_err(|error| {
+                log::warn!("Failed to load public key {}", error);
+                DomainError::PermissionError("Invalid public key".to_string())
+            })?;
 
-        let key_pair = KeyPair::generate().map_err(|_| HandshakeError::KeyGenError)?;
+        let key_pair = KeyPair::generate().map_err(|error| {
+            log::error!("Failed to generate key pair {}", error);
+            DomainError::KeyError("Failed to generate key pair".to_string())
+        })?;
 
         let session = CachedSession {
             id: Uuid::new_v4(),
@@ -33,15 +40,17 @@ where
 
         self.cache
             .save_session(&session)
-            .await
-            .map_err(|_| HandshakeError::CacheError)?;
+            .await?;
 
         let token = PreAuthToken {
             session_id: session.id,
             expiry_s: session
                 .expiry
                 .duration_since(UNIX_EPOCH)
-                .map_err(|_| HandshakeError::TokenCreationError)?
+                .map_err(|error| {
+                    log::error!("Failed to get session expiry time {}", error);
+                    DomainError::GenericError("Failed to get session expiry time".to_string())
+                })?
                 .as_secs(),
         };
 
@@ -49,7 +58,10 @@ where
             public_key: key_pair.public.to_b64(),
             token: key_pair
                 .encrypt(&token.to_bytes(), &client_pub_key)
-                .map_err(|_| HandshakeError::TokenEncryptionError)?
+                .map_err(|error| {
+                    log::error!("Failed to encrypt token {}", error);
+                    DomainError::EncryptionError("Failed to encrypt token".to_string())
+                })?
                 .to_b64(),
         })
     }

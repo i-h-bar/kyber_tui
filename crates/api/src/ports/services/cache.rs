@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 use thiserror::Error;
 use uuid::Uuid;
+use crate::domain::errors::routes::DomainError;
 
 #[derive(Error, Debug)]
 pub enum CacheError {
@@ -27,7 +28,7 @@ pub struct CachedSession {
 
 #[async_trait]
 pub trait Cache {
-    fn create() -> Self;
-    async fn save_session(&self, session: &CachedSession) -> Result<(), CacheError>;
-    async fn load_session(&self, session_id: &Uuid) -> Result<CachedSession, CacheError>;
+    async fn create() -> Self;
+    async fn save_session(&self, session: &CachedSession) -> Result<(), DomainError>;
+    async fn load_session(&self, session_id: &Uuid) -> Result<CachedSession, DomainError>;
 }

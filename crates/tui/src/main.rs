@@ -36,8 +36,6 @@ async fn main() {
         .unwrap();
     let token = PreAuthToken::from_bytes(&message);
 
-    let token_b64 = token.to_b64();
-
     let new_user = NewUserRequest {
         username: "Username".to_string(),
         password: env::var("PASSWORD").unwrap(),
@@ -46,8 +44,8 @@ async fn main() {
     println!("{}", token.session_id);
     let new_user_request = GenericRequest {
         session_id: token.session_id,
-        body: key_pair.encrypt_b64(&new_user.to_b64(), &server_pub_key).unwrap(),
-        token: token_b64,
+        body: key_pair.encrypt_b64(&serde_json::to_string(&new_user).unwrap(), &server_pub_key).unwrap(),
+        token: response.token,
     };
 
     let new_user_response = client
