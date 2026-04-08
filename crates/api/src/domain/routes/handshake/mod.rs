@@ -1,3 +1,5 @@
+use crate::domain::Application;
+use crate::domain::errors::routes::DomainError;
 use crate::ports::services::cache::{Cache, CachedSession};
 use crate::ports::services::pw_store::PWStore;
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
@@ -7,8 +9,6 @@ use kyber_crypto::keys::public::Public;
 use std::ops::Add;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
-use crate::domain::Application;
-use crate::domain::errors::routes::DomainError;
 
 impl<C, PW> Application<C, PW>
 where
@@ -19,11 +19,10 @@ where
         &self,
         payload: HandshakeRequest,
     ) -> Result<HandshakeResponse, DomainError> {
-        let client_pub_key =
-            Public::from_b64(&payload.pub_key).map_err(|error| {
-                log::warn!("Failed to load public key {}", error);
-                DomainError::PermissionError("Invalid public key".to_string())
-            })?;
+        let client_pub_key = Public::from_b64(&payload.pub_key).map_err(|error| {
+            log::warn!("Failed to load public key {}", error);
+            DomainError::PermissionError("Invalid public key".to_string())
+        })?;
 
         let key_pair = KeyPair::generate().map_err(|error| {
             log::error!("Failed to generate key pair {}", error);
@@ -38,9 +37,7 @@ where
             user_id: None,
         };
 
-        self.cache
-            .save_session(&session)
-            .await?;
+        self.cache.save_session(&session).await?;
 
         let token = PreAuthToken {
             session_id: session.id,

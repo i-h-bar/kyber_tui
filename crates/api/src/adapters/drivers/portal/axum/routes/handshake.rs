@@ -1,3 +1,4 @@
+use crate::adapters::drivers::portal::axum::response_codes::map_domain_error;
 use crate::domain::Application;
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::PWStore;
@@ -5,7 +6,6 @@ use axum::Json;
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
 use http::StatusCode;
 use std::sync::Arc;
-use crate::adapters::drivers::portal::axum::response_codes::map_domain_error;
 
 pub async fn run<C, PW>(
     app: Arc<Application<C, PW>>,

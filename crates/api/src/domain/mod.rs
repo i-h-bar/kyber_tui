@@ -2,6 +2,7 @@ use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::PWStore;
 use std::env;
 
+pub mod auth;
 pub mod errors;
 pub mod routes;
 
@@ -12,7 +13,6 @@ where
 {
     cache: C,
     pw_store: PW,
-    salt: String,
 }
 
 impl<C, PW> Application<C, PW>
@@ -21,10 +21,6 @@ where
     PW: PWStore + Send + Sync,
 {
     pub(crate) fn new(cache: C, pw_store: PW) -> Self {
-        Self {
-            cache,
-            pw_store,
-            salt: env::var("API_SALT").expect("SMTP_SALT env var").into(),
-        }
+        Self { cache, pw_store }
     }
 }

@@ -77,7 +77,7 @@ impl KeyPair {
             signed_ciphertext,
         })
     }
-    
+
     pub fn encrypt_bytes_to_b64(&self, msg: &[u8], recipient: &Public) -> Result<String, KeyError> {
         Ok(self.encrypt(msg, recipient)?.to_b64())
     }

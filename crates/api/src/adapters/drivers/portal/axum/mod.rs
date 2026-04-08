@@ -9,8 +9,8 @@ use axum::routing::{get, post};
 use std::sync::Arc;
 use tokio::net::TcpListener;
 
-pub mod routes;
 pub mod response_codes;
+pub mod routes;
 
 pub struct AxumPortal<C, PW>
 where

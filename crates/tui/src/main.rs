@@ -1,12 +1,12 @@
-use std::env;
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
-use contracts::token::PreAuthToken;
-use dotenv::dotenv;
-use contracts::{GenericRequest, GenericResponse};
 use contracts::new_user::NewUserRequest;
+use contracts::token::PreAuthToken;
+use contracts::{GenericRequest, GenericResponse};
+use dotenv::dotenv;
 use kyber_crypto::keys::pair::KeyPair;
 use kyber_crypto::keys::public::Public;
 use kyber_crypto::message::EncryptedMessage;
+use std::env;
 
 #[tokio::main]
 async fn main() {
@@ -44,7 +44,9 @@ async fn main() {
     println!("{}", token.session_id);
     let new_user_request = GenericRequest {
         session_id: token.session_id,
-        body: key_pair.encrypt_b64(&serde_json::to_string(&new_user).unwrap(), &server_pub_key).unwrap(),
+        body: key_pair
+            .encrypt_b64(&serde_json::to_string(&new_user).unwrap(), &server_pub_key)
+            .unwrap(),
         token: response.token,
     };
 
@@ -58,5 +60,4 @@ async fn main() {
     println!("Response: {:?}", &new_user_response);
 
     let new_user_response = new_user_response.json::<GenericResponse>().await.unwrap();
-
 }

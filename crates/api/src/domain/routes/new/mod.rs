@@ -7,11 +7,11 @@ use kyber_crypto::keys::KeyPair;
 use kyber_crypto::keys::public::Public;
 use uuid::Uuid;
 
+use crate::domain::errors::routes::DomainError;
 use argon2::{
     Argon2,
     password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
 };
-use crate::domain::errors::routes::DomainError;
 
 impl<C, PW> Application<C, PW>
 where
@@ -24,9 +24,7 @@ where
     ) -> Result<GenericResponse, DomainError> {
         let session = self.cache.load_session(&request.session_id).await?;
         let key_pair = KeyPair::from_b64(&session.server_key_pair).unwrap();
-        if !key_pair.verify_b64(&request.token) {
-            return Err(DomainError::PermissionError("Permission denied".to_string()));
-        }
+        self.check_pre_auth_token(&request.token, &key_pair)?;
 
         let client_public = Public::from_b64(&session.client_public_key).unwrap();
         let message = key_pair.decrypt_b64(&request.body, &client_public).unwrap();

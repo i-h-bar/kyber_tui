@@ -1,9 +1,9 @@
+use crate::domain::errors::routes::DomainError;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 use thiserror::Error;
 use uuid::Uuid;
-use crate::domain::errors::routes::DomainError;
 
 #[derive(Error, Debug)]
 pub enum CacheError {

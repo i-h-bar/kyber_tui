@@ -23,7 +23,6 @@ impl NewUserResponse {
     }
 }
 
-
 impl NewUserRequest {
     pub fn to_b64(&self) -> String {
         STANDARD.encode(serde_json::to_vec(&self).unwrap().as_slice())
