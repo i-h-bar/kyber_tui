@@ -1,4 +1,5 @@
 use crate::domain::errors::routes::DomainError;
+use crate::domain::session::Session;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
@@ -17,19 +18,9 @@ pub enum CacheError {
     LoadError(String),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct CachedSession {
-    pub id: Uuid,
-    pub client_public_key: String,
-    pub server_key_pair: String,
-    pub expiry: SystemTime,
-    pub token_key: [u8; 32],
-    pub user_id: Option<Uuid>,
-}
-
 #[async_trait]
 pub trait Cache {
     async fn create() -> Self;
-    async fn save_session(&self, session: &CachedSession) -> Result<(), DomainError>;
-    async fn load_session(&self, session_id: &Uuid) -> Result<CachedSession, DomainError>;
+    async fn save_session(&self, session: &Session) -> Result<(), DomainError>;
+    async fn load_session(&self, session_id: &Uuid) -> Result<Session, DomainError>;
 }

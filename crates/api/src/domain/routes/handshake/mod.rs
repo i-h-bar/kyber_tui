@@ -1,6 +1,7 @@
 use crate::domain::Application;
 use crate::domain::errors::routes::DomainError;
-use crate::ports::services::cache::{Cache, CachedSession};
+use crate::domain::session::Session;
+use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::PWStore;
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
 use contracts::token::PreAuthToken;
@@ -21,13 +22,13 @@ where
         &self,
         payload: HandshakeRequest,
     ) -> Result<HandshakeResponse, DomainError> {
-        let client_pub_key = Public::from_b64(&payload.pub_key).map_err(|error| {
+        let client_public_key = Public::from_b64(&payload.pub_key).map_err(|error| {
             log::warn!("Failed to load public key {}", error);
             DomainError::PermissionError("Invalid public key".to_string())
         })?;
 
         let start = Instant::now();
-        let key_pair = KeyPair::generate().map_err(|error| {
+        let server_key_pair = KeyPair::generate().map_err(|error| {
             log::error!("Failed to generate key pair {}", error);
             DomainError::KeyError("Failed to generate key pair".to_string())
         })?;
@@ -48,18 +49,18 @@ where
         };
 
         let start = Instant::now();
-        let (encrypted_token, shared_secret) = key_pair
-            .encrypt_with_secret(&token.to_bytes(), &client_pub_key)
+        let (encrypted_token, shared_secret) = server_key_pair
+            .encrypt_with_secret(&token.to_bytes(), &client_public_key)
             .map_err(|error| {
                 log::error!("Failed to encrypt token {}", error);
                 DomainError::EncryptionError("Failed to encrypt token".to_string())
             })?;
         log::info!("Token encrypted in {:?}ms", start.elapsed().as_millis());
 
-        let session = CachedSession {
+        let session = Session {
             id: token.session_id,
-            client_public_key: payload.pub_key,
-            server_key_pair: key_pair.to_b64(),
+            client_public_key,
+            server_key_pair,
             expiry: session_expiry,
             token_key: shared_secret,
             user_id: None,
@@ -68,7 +69,7 @@ where
         self.cache.save_session(&session).await?;
 
         Ok(HandshakeResponse {
-            public_key: key_pair.public.to_b64(),
+            public_key: session.server_key_pair.public.to_b64(),
             token: encrypted_token.to_b64(),
         })
     }

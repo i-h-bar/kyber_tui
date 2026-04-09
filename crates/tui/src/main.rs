@@ -45,7 +45,7 @@ async fn main() {
     let new_user_request = GenericRequest {
         session_id: token.session_id,
         body: key_pair
-            .encrypt_to_b64(&serde_json::to_string(&new_user).unwrap(), &server_pub_key)
+            .encrypt_obj(&new_user, &server_pub_key)
             .unwrap(),
         token: response.token,
     };

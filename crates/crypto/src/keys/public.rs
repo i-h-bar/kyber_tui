@@ -4,9 +4,11 @@ use pqcrypto_dilithium::dilithium3;
 use pqcrypto_kyber::kyber512;
 use pqcrypto_traits::kem::PublicKey as KemPublicKey;
 use pqcrypto_traits::sign::PublicKey;
+use serde::{Deserialize, Serialize};
 
 pub const PUBLIC_KEY_SIZE: usize = 2752;
 
+#[derive(Serialize, Deserialize)]
 pub struct Public {
     kem: kyber512::PublicKey,
     signing: dilithium3::PublicKey,

@@ -1,7 +1,6 @@
-use crate::keys::KeyError;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
-use pqcrypto_traits::sign::SignedMessage;
+use serde::{Deserializer, Serializer, de};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -11,7 +10,7 @@ pub enum EncryptedMessageError {
 }
 
 pub struct EncryptedMessage {
-    pub kyber_ciphertext: [u8; 768],
+    pub kem_ciphertext: [u8; 768],
     pub nonce: [u8; 12],
     pub signed_ciphertext: Vec<u8>,
 }
@@ -21,7 +20,7 @@ impl EncryptedMessage {
     #[must_use]
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(780 + self.signed_ciphertext.len());
-        buf.extend_from_slice(&self.kyber_ciphertext);
+        buf.extend_from_slice(&self.kem_ciphertext);
         buf.extend_from_slice(&self.nonce);
         buf.extend_from_slice(&self.signed_ciphertext);
         buf
@@ -33,7 +32,7 @@ impl EncryptedMessage {
             return Err(EncryptedMessageError::DeserialisationError);
         }
         Ok(EncryptedMessage {
-            kyber_ciphertext: bytes[..768]
+            kem_ciphertext: bytes[..768]
                 .try_into()
                 .map_err(|_| EncryptedMessageError::DeserialisationError)?,
             nonce: bytes[768..780]
@@ -54,5 +53,18 @@ impl EncryptedMessage {
             .map_err(|_| EncryptedMessageError::DeserialisationError)?;
 
         Self::from_bytes(&bytes)
+    }
+}
+
+impl serde::Serialize for EncryptedMessage {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_bytes(&self.to_bytes())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for EncryptedMessage {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let bytes = <Vec<u8>>::deserialize(deserializer)?;
+        Self::from_bytes(&bytes).map_err(de::Error::custom)
     }
 }

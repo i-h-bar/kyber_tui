@@ -3,9 +3,11 @@ use pqcrypto_dilithium::dilithium3;
 use pqcrypto_kyber::kyber512;
 use pqcrypto_traits::kem::SecretKey as KemSecretKey;
 use pqcrypto_traits::sign::SecretKey as SecretKeyTrait;
+use serde::{Deserialize, Serialize};
 
 pub const SECRET_KEY_SIZE: usize = 5664;
 
+#[derive(Serialize, Deserialize)]
 pub struct Secret {
     kem: kyber512::SecretKey,
     signing: dilithium3::SecretKey,

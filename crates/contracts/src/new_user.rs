@@ -1,6 +1,7 @@
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
 use serde::{Deserialize, Serialize};
+use kyber_crypto::keys::traits::{B64Serialisation, DeserialisationError};
 
 #[derive(Serialize, Deserialize)]
 pub struct NewUserRequest {
@@ -13,22 +14,22 @@ pub struct NewUserResponse {
     pub success: bool,
 }
 
-impl NewUserResponse {
-    pub fn to_b64(&self) -> String {
+impl B64Serialisation for NewUserResponse {
+    fn to_b64(&self) -> String {
         STANDARD.encode(serde_json::to_vec(&self).unwrap().as_slice())
     }
 
-    pub fn from_b64(b64: &str) -> Self {
-        serde_json::from_slice(STANDARD.decode(b64).unwrap().as_slice()).unwrap()
+    fn from_b64(b64: &str) -> Result<Self, DeserialisationError> {
+        serde_json::from_slice(STANDARD.decode(b64).unwrap().as_slice()).map_err(|_| DeserialisationError)
     }
 }
 
-impl NewUserRequest {
-    pub fn to_b64(&self) -> String {
+impl B64Serialisation for NewUserRequest {
+    fn to_b64(&self) -> String {
         STANDARD.encode(serde_json::to_vec(&self).unwrap().as_slice())
     }
 
-    pub fn from_b64(b64: &str) -> Self {
-        serde_json::from_slice(STANDARD.decode(b64).unwrap().as_slice()).unwrap()
+    fn from_b64(b64: &str) -> Result<Self, DeserialisationError> {
+        serde_json::from_slice(STANDARD.decode(b64).unwrap().as_slice()).map_err(|_| DeserialisationError)
     }
 }

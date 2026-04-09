@@ -1,4 +1,3 @@
-use std::time::Instant;
 use crate::domain::Application;
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::{CreateUser, PWStore};
@@ -6,6 +5,7 @@ use contracts::new_user::{NewUserRequest, NewUserResponse};
 use contracts::{GenericRequest, GenericResponse};
 use kyber_crypto::keys::KeyPair;
 use kyber_crypto::keys::public::Public;
+use std::time::Instant;
 use uuid::Uuid;
 
 use crate::domain::errors::routes::DomainError;
@@ -23,20 +23,17 @@ where
         &self,
         request: GenericRequest,
     ) -> Result<GenericResponse, DomainError> {
-        let session = self.load_session_info(request.session_id).await?;
+        let session = self.cache.load_session(&request.session_id).await?;
         self.check_pre_auth_token(&request.token, &session)?;
 
-        let message = session
+        let new_user: NewUserRequest = session
             .server_key_pair
-            .decrypt_b64(&request.body, &session.client_public_key)
+            .decrypt_to_obj(&request.body, &session.client_public_key)
             .map_err(|err| {
                 log::warn!("Error decrypting message {}", err);
                 DomainError::DecryptionError("Error decrypting message".to_string())
             })?;
-        let new_user: NewUserRequest = serde_json::from_str(&message).map_err(|error| {
-            log::warn!("Error deserialising NewUserRequest {}", error);
-            DomainError::DeserialisationError("Error deserialising NewUserRequest".to_string())
-        })?;
+
         let user_id = Uuid::new_v4();
 
         let start = Instant::now();
@@ -66,17 +63,13 @@ where
             })?;
 
         let response = NewUserResponse { success: true };
-        let body = serde_json::to_string(&response).map_err(|error| {
-            log::warn!("Error serializing NewUserResponse {}", error);
-            DomainError::SerialisationError("Error serializing NewUserResponse".to_string())
-        })?;
 
         Ok(GenericResponse {
             session_id: session.id,
             body: session
                 .server_key_pair
-                .encrypt_to_b64(&body,&session.client_public_key)
-                .map_err(| error | {
+                .encrypt_obj(&response, &session.client_public_key)
+                .map_err(|error| {
                     log::error!("Error encrypting new user body {}", error);
                     DomainError::EncryptionError("Error encrypting new user body".to_string())
                 })?,

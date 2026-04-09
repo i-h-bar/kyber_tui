@@ -5,7 +5,7 @@ use std::env;
 pub mod auth;
 pub mod errors;
 pub mod routes;
-mod session;
+pub mod session;
 
 pub struct Application<C, PW>
 where
