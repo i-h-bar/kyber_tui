@@ -1,11 +1,12 @@
 use crate::domain::errors::routes::DomainError;
-use crate::ports::services::cache::{Cache, CacheError, CachedSession};
+use crate::ports::services::cache::Cache;
 use async_trait::async_trait;
 use redis::aio::MultiplexedConnection;
 use redis::{AsyncCommands, Client, RedisError, SetExpiry, SetOptions};
 use sqlx::postgres::PgTypeKind::Domain;
 use std::env;
 use uuid::Uuid;
+use crate::domain::session::Session;
 
 pub struct RedisCache {
     connection: MultiplexedConnection,
@@ -24,7 +25,7 @@ impl Cache for RedisCache {
             .expect("Failed to connect to Redis");
         Self { connection }
     }
-    async fn save_session(&self, session: &CachedSession) -> Result<(), DomainError> {
+    async fn save_session(&self, session: &Session) -> Result<(), DomainError> {
         let session_str = serde_json::to_string(&session).map_err(|error| {
             log::warn!("Session serialisation error: {}", error);
             DomainError::SerialisationError("Failed to serialise session".to_string())
@@ -45,7 +46,7 @@ impl Cache for RedisCache {
         Ok(())
     }
 
-    async fn load_session(&self, session_id: &Uuid) -> Result<CachedSession, DomainError> {
+    async fn load_session(&self, session_id: &Uuid) -> Result<Session, DomainError> {
         Ok(serde_json::from_str(
             &self
                 .get_connection()
