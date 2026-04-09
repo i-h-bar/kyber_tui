@@ -23,26 +23,51 @@ where
         request: GenericRequest,
     ) -> Result<GenericResponse, DomainError> {
         let session = self.cache.load_session(&request.session_id).await?;
-        let key_pair = KeyPair::from_b64(&session.server_key_pair).unwrap();
-        self.check_pre_auth_token(&request.token, &key_pair)?;
+        let key_pair = KeyPair::from_b64(&session.server_key_pair).map_err(|err| {
+            log::error!("Error deserialising key pair {}", err);
+            DomainError::DeserialisationError("Error deserialising key pair".to_string())
+        })?;
+        self.check_pre_auth_token(&request.token, &session, &key_pair)?;
 
-        let client_public = Public::from_b64(&session.client_public_key).unwrap();
-        let message = key_pair.decrypt_b64(&request.body, &client_public).unwrap();
-        let new_user: NewUserRequest = serde_json::from_str(&message).unwrap();
+        let client_public = Public::from_b64(&session.client_public_key).map_err(|err| {
+            log::error!("Error deserialising client public key {}", err);
+            DomainError::DeserialisationError("Error deserialising client public key".to_string())
+        })?;
+        let message = key_pair
+            .decrypt_b64(&request.body, &client_public)
+            .map_err(|err| {
+                log::warn!("Error decrypting message {}", err);
+                DomainError::EncryptionError("Error decrypting message".to_string())
+            })?;
+        let new_user: NewUserRequest = serde_json::from_str(&message).map_err(|error| {
+            log::warn!("Error deserialising NewUserRequest {}", error);
+            DomainError::DeserialisationError("Error deserialising NewUserRequest".to_string())
+        })?;
         let user_id = Uuid::new_v4();
 
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
+        let hashed_pw = argon2
+            .hash_password(new_user.password.as_bytes(), &salt)
+            .map_err(|err| {
+                log::warn!("Error hashing password {}", err);
+                DomainError::GenericError("Error hashing password".to_string())
+            })?
+            .to_string();
 
         let create_user = CreateUser {
             id: user_id,
             username: new_user.username,
-            hashed_pw: argon2
-                .hash_password(new_user.password.as_bytes(), &salt)
-                .unwrap()
-                .to_string(),
+            hashed_pw,
         };
-        let _ = self.pw_store.create_user(create_user).await.unwrap();
+        let _ = self
+            .pw_store
+            .create_user(create_user)
+            .await
+            .map_err(|error| {
+                log::warn!("User creation failed: {:?}", error);
+                DomainError::GenericError("User creation failed".to_string())
+            })?;
 
         let response = NewUserResponse { success: true };
 

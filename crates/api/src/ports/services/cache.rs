@@ -23,6 +23,7 @@ pub struct CachedSession {
     pub client_public_key: String,
     pub server_key_pair: String,
     pub expiry: SystemTime,
+    pub token_key: [u8; 32],
     pub user_id: Option<Uuid>,
 }
 

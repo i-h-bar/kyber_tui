@@ -47,12 +47,12 @@ impl KeyPair {
         })
     }
 
-    /// Encrypt `plaintext` for `recipient`, signing it with this keypair.
-    pub fn encrypt(
+    /// Encrypt `plaintext` for `recipient`, signing it with this keypair. Returning the encrypted message & shared secret
+    pub fn encrypt_with_secret(
         &self,
         plaintext: &[u8],
         recipient: &Public,
-    ) -> Result<EncryptedMessage, KeyError> {
+    ) -> Result<(EncryptedMessage, [u8; 32]), KeyError> {
         let mut rng = OsRng;
 
         let (kyber_ciphertext, shared_secret) =
@@ -71,11 +71,24 @@ impl KeyPair {
                 .as_bytes()
                 .to_vec();
 
-        Ok(EncryptedMessage {
-            kyber_ciphertext,
-            nonce,
-            signed_ciphertext,
-        })
+        Ok((
+            EncryptedMessage {
+                kyber_ciphertext,
+                nonce,
+                signed_ciphertext,
+            },
+            shared_secret,
+        ))
+    }
+
+    /// Encrypt `plaintext` for `recipient`, signing it with this keypair.
+    pub fn encrypt(
+        &self,
+        plaintext: &[u8],
+        recipient: &Public,
+    ) -> Result<EncryptedMessage, KeyError> {
+        self.encrypt_with_secret(plaintext, recipient)
+            .map(|(encrypted_message, _)| encrypted_message)
     }
 
     pub fn encrypt_bytes_to_b64(&self, msg: &[u8], recipient: &Public) -> Result<String, KeyError> {
@@ -106,6 +119,34 @@ impl KeyPair {
 
         let cipher =
             Aes256Gcm::new_from_slice(&shared_secret).map_err(|_| KeyError::DecryptionFailed)?;
+        cipher
+            .decrypt(Nonce::from_slice(&msg.nonce), aes_ciphertext.as_ref())
+            .map_err(|_| KeyError::DecryptionFailed)
+    }
+
+    pub fn decrypt_with_secret_from_b64(
+        &self,
+        msg: &str,
+        secret: &[u8; 32],
+        sender: &Public,
+    ) -> Result<Vec<u8>, KeyError> {
+        let encrypted_message =
+            EncryptedMessage::from_b64(msg).map_err(|_| KeyError::EncryptionFailed)?;
+        self.decrypt_with_secret(&encrypted_message, secret, sender)
+    }
+
+    pub fn decrypt_with_secret(
+        &self,
+        msg: &EncryptedMessage,
+        secret: &[u8; 32],
+        sender: &Public,
+    ) -> Result<Vec<u8>, KeyError> {
+        let signed_message = SignedMessage::from_bytes(&msg.signed_ciphertext)
+            .map_err(|_| KeyError::DeserialisationFailed)?;
+        let aes_ciphertext = sphincsshake128fsimple::open(&signed_message, sender.signing())
+            .map_err(|_| KeyError::VerificationFailed)?;
+
+        let cipher = Aes256Gcm::new_from_slice(secret).map_err(|_| KeyError::DecryptionFailed)?;
         cipher
             .decrypt(Nonce::from_slice(&msg.nonce), aes_ciphertext.as_ref())
             .map_err(|_| KeyError::DecryptionFailed)

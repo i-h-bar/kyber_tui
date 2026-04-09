@@ -29,20 +29,12 @@ where
             DomainError::KeyError("Failed to generate key pair".to_string())
         })?;
 
-        let session = CachedSession {
-            id: Uuid::new_v4(),
-            client_public_key: payload.pub_key,
-            server_key_pair: key_pair.to_b64(),
-            expiry: SystemTime::now().add(Duration::from_secs(30)),
-            user_id: None,
-        };
-
-        self.cache.save_session(&session).await?;
+        let session_id = Uuid::new_v4();
+        let session_expiry = SystemTime::now().add(Duration::from_secs(30));
 
         let token = PreAuthToken {
-            session_id: session.id,
-            expiry_s: session
-                .expiry
+            session_id: session_id,
+            expiry_s: session_expiry
                 .duration_since(UNIX_EPOCH)
                 .map_err(|error| {
                     log::error!("Failed to get session expiry time {}", error);
@@ -51,15 +43,27 @@ where
                 .as_secs(),
         };
 
+        let (encrypted_token, shared_secret) = key_pair
+            .encrypt_with_secret(&token.to_bytes(), &client_pub_key)
+            .map_err(|error| {
+                log::error!("Failed to encrypt token {}", error);
+                DomainError::EncryptionError("Failed to encrypt token".to_string())
+            })?;
+
+        let session = CachedSession {
+            id: token.session_id,
+            client_public_key: payload.pub_key,
+            server_key_pair: key_pair.to_b64(),
+            expiry: session_expiry,
+            token_key: shared_secret,
+            user_id: None,
+        };
+
+        self.cache.save_session(&session).await?;
+
         Ok(HandshakeResponse {
             public_key: key_pair.public.to_b64(),
-            token: key_pair
-                .encrypt(&token.to_bytes(), &client_pub_key)
-                .map_err(|error| {
-                    log::error!("Failed to encrypt token {}", error);
-                    DomainError::EncryptionError("Failed to encrypt token".to_string())
-                })?
-                .to_b64(),
+            token: encrypted_token.to_b64(),
         })
     }
 }
