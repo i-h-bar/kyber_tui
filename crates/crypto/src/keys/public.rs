@@ -1,25 +1,31 @@
 use crate::keys::KeyError;
 use base64::{Engine, engine::general_purpose::STANDARD};
-use pqcrypto_sphincsplus::sphincsshake128fsimple::PublicKey as SignPublicKey;
+use pqcrypto_dilithium::dilithium3;
+use pqcrypto_kyber::kyber512;
+use pqcrypto_traits::kem::PublicKey as KemPublicKey;
 use pqcrypto_traits::sign::PublicKey;
 
-#[derive(Clone, Debug)]
+pub const PUBLIC_KEY_SIZE: usize = 2752;
+
 pub struct Public {
-    kem: [u8; 800],
-    signing: SignPublicKey,
+    kem: kyber512::PublicKey,
+    signing: dilithium3::PublicKey,
 }
 
 impl Public {
     #[must_use]
-    pub fn new(kem: [u8; 800], signing: SignPublicKey) -> Public {
+    pub fn new(kem: kyber512::PublicKey, signing: dilithium3::PublicKey) -> Public {
         Self { kem, signing }
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Public, KeyError> {
-        let kem: [u8; 800] = bytes[..800]
-            .try_into()
+        if bytes.len() != PUBLIC_KEY_SIZE {
+            return Err(KeyError::DeserialisationFailed);
+        }
+
+        let kem = kyber512::PublicKey::from_bytes(&bytes[..800])
             .map_err(|_| KeyError::DeserialisationFailed)?;
-        let signing = SignPublicKey::from_bytes(&bytes[800..])
+        let signing = dilithium3::PublicKey::from_bytes(&bytes[800..])
             .map_err(|_| KeyError::DeserialisationFailed)?;
 
         Ok(Public { kem, signing })
@@ -34,19 +40,19 @@ impl Public {
     }
 
     #[must_use]
-    pub fn kem(&self) -> &[u8; 800] {
+    pub fn kem(&self) -> &kyber512::PublicKey {
         &self.kem
     }
 
     #[must_use]
-    pub fn signing(&self) -> &SignPublicKey {
+    pub fn signing(&self) -> &dilithium3::PublicKey {
         &self.signing
     }
 
     #[must_use]
     pub fn to_bytes(&self) -> Vec<u8> {
-        let mut buff = Vec::with_capacity(832);
-        buff.extend_from_slice(&self.kem);
+        let mut buff = Vec::with_capacity(PUBLIC_KEY_SIZE);
+        buff.extend_from_slice(self.kem.as_bytes());
         buff.extend_from_slice(self.signing.as_bytes());
 
         buff

@@ -1,15 +1,18 @@
-use crate::keys::public::Public;
-use crate::keys::secret::Secret;
+use crate::keys::public::{Public, PUBLIC_KEY_SIZE};
+use crate::keys::secret::{Secret, SECRET_KEY_SIZE};
 use crate::message::EncryptedMessage;
 use aes_gcm::aead::rand_core::RngCore;
 use aes_gcm::aead::{Aead, OsRng};
 use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
-use pqc_kyber::{decapsulate, encapsulate, keypair};
-use pqcrypto_sphincsplus::sphincsshake128fsimple;
+use pqcrypto_dilithium::dilithium3;
+use pqcrypto_kyber::kyber512;
+use pqcrypto_traits::kem::{Ciphertext as KemCiphertext, SharedSecret as KemSharedSecret};
 use pqcrypto_traits::sign::SignedMessage;
 use thiserror::Error;
+
+pub const KEY_PAIR_SIZE: usize = SECRET_KEY_SIZE + PUBLIC_KEY_SIZE;
 
 #[derive(Error, Debug)]
 pub enum KeyError {
@@ -29,6 +32,7 @@ pub enum KeyError {
     DeserialisationFailed,
 }
 
+
 pub struct KeyPair {
     pub public: Public,
     secret: Secret,
@@ -37,13 +41,12 @@ pub struct KeyPair {
 impl KeyPair {
     /// Generate a fresh Kyber KEM + SPHINCS+ keypair.
     pub fn generate() -> Result<Self, KeyError> {
-        let mut rng = OsRng;
-        let kem = keypair(&mut rng).map_err(|_| KeyError::GenerationFailed)?;
-        let (sign_public, sign_secret) = sphincsshake128fsimple::keypair();
+        let (kem_public, kem_secret) = kyber512::keypair();
+        let (sign_public, sign_secret) = dilithium3::keypair();
 
         Ok(KeyPair {
-            public: Public::new(kem.public, sign_public),
-            secret: Secret::new(kem.secret, sign_secret),
+            public: Public::new(kem_public, sign_public),
+            secret: Secret::new(kem_secret, sign_secret),
         })
     }
 
@@ -55,8 +58,9 @@ impl KeyPair {
     ) -> Result<(EncryptedMessage, [u8; 32]), KeyError> {
         let mut rng = OsRng;
 
-        let (kyber_ciphertext, shared_secret) =
-            encapsulate(recipient.kem(), &mut rng).map_err(|_| KeyError::EncapsulationFailed)?;
+        let (shared_secret, kem_ciphertext) = kyber512::encapsulate(recipient.kem());
+        let shared_secret: [u8; 32] = shared_secret.as_bytes().try_into().map_err(|_| KeyError::EncapsulationFailed)?;
+        let kem_ciphertext: [u8; 768] = kem_ciphertext.as_bytes().try_into().map_err(|_| KeyError::EncapsulationFailed)?;
 
         let cipher =
             Aes256Gcm::new_from_slice(&shared_secret).map_err(|_| KeyError::EncryptionFailed)?;
@@ -67,13 +71,13 @@ impl KeyPair {
             .map_err(|_| KeyError::EncryptionFailed)?;
 
         let signed_ciphertext =
-            sphincsshake128fsimple::sign(&aes_ciphertext, self.secret.signing())
+            dilithium3::sign(&aes_ciphertext, self.secret.signing())
                 .as_bytes()
                 .to_vec();
 
         Ok((
             EncryptedMessage {
-                kyber_ciphertext,
+                kyber_ciphertext: kem_ciphertext,
                 nonce,
                 signed_ciphertext,
             },
@@ -95,7 +99,7 @@ impl KeyPair {
         Ok(self.encrypt(msg, recipient)?.to_b64())
     }
 
-    pub fn encrypt_b64(&self, plaintext: &str, recipient: &Public) -> Result<String, KeyError> {
+    pub fn encrypt_to_b64(&self, plaintext: &str, recipient: &Public) -> Result<String, KeyError> {
         Ok(self.encrypt(plaintext.as_bytes(), recipient)?.to_b64())
     }
 
@@ -111,14 +115,16 @@ impl KeyPair {
     pub fn decrypt(&self, msg: &EncryptedMessage, sender: &Public) -> Result<Vec<u8>, KeyError> {
         let signed_message = SignedMessage::from_bytes(&msg.signed_ciphertext)
             .map_err(|_| KeyError::DeserialisationFailed)?;
-        let aes_ciphertext = sphincsshake128fsimple::open(&signed_message, sender.signing())
+        let aes_ciphertext = dilithium3::open(&signed_message, sender.signing())
             .map_err(|_| KeyError::VerificationFailed)?;
 
-        let shared_secret = decapsulate(&msg.kyber_ciphertext, self.secret.kem())
+        let ct = kyber512::Ciphertext::from_bytes(&msg.kyber_ciphertext)
             .map_err(|_| KeyError::DecapsulationFailed)?;
+        let shared_secret = kyber512::decapsulate(&ct, self.secret.kem());
+        let ss_bytes: [u8; 32] = shared_secret.as_bytes().try_into().map_err(|_| KeyError::DecapsulationFailed)?;
 
         let cipher =
-            Aes256Gcm::new_from_slice(&shared_secret).map_err(|_| KeyError::DecryptionFailed)?;
+            Aes256Gcm::new_from_slice(&ss_bytes).map_err(|_| KeyError::DecryptionFailed)?;
         cipher
             .decrypt(Nonce::from_slice(&msg.nonce), aes_ciphertext.as_ref())
             .map_err(|_| KeyError::DecryptionFailed)
@@ -143,7 +149,7 @@ impl KeyPair {
     ) -> Result<Vec<u8>, KeyError> {
         let signed_message = SignedMessage::from_bytes(&msg.signed_ciphertext)
             .map_err(|_| KeyError::DeserialisationFailed)?;
-        let aes_ciphertext = sphincsshake128fsimple::open(&signed_message, sender.signing())
+        let aes_ciphertext = dilithium3::open(&signed_message, sender.signing())
             .map_err(|_| KeyError::VerificationFailed)?;
 
         let cipher = Aes256Gcm::new_from_slice(secret).map_err(|_| KeyError::DecryptionFailed)?;
@@ -158,7 +164,7 @@ impl KeyPair {
             Ok(signed_message) => signed_message,
             Err(_) => return false,
         };
-        match sphincsshake128fsimple::open(&signed_message, self.public.signing()) {
+        match dilithium3::open(&signed_message, self.public.signing()) {
             Ok(_) => true,
             Err(_) => false,
         }
@@ -181,13 +187,13 @@ impl KeyPair {
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, KeyError> {
-        if bytes.len() != 2528 {
+        if bytes.len() != KEY_PAIR_SIZE {
             return Err(KeyError::DeserialisationFailed);
         }
 
         Ok(Self {
-            public: Public::from_bytes(&bytes[..832])?,
-            secret: Secret::from_bytes(&bytes[832..])?,
+            public: Public::from_bytes(&bytes[..PUBLIC_KEY_SIZE])?,
+            secret: Secret::from_bytes(&bytes[PUBLIC_KEY_SIZE..])?,
         })
     }
 

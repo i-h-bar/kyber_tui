@@ -14,6 +14,9 @@ pub enum DomainError {
     #[error("Encryption error: {0}")]
     EncryptionError(String),
 
+    #[error("Decryption error: {0}")]
+    DecryptionError(String),
+
     #[error("Permission error: {0}")]
     PermissionError(String),
 

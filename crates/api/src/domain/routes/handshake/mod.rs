@@ -7,7 +7,9 @@ use contracts::token::PreAuthToken;
 use kyber_crypto::keys::pair::KeyPair;
 use kyber_crypto::keys::public::Public;
 use std::ops::Add;
+use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tokio::time::Instant;
 use uuid::Uuid;
 
 impl<C, PW> Application<C, PW>
@@ -24,16 +26,18 @@ where
             DomainError::PermissionError("Invalid public key".to_string())
         })?;
 
+        let start = Instant::now();
         let key_pair = KeyPair::generate().map_err(|error| {
             log::error!("Failed to generate key pair {}", error);
             DomainError::KeyError("Failed to generate key pair".to_string())
         })?;
+        log::info!("Key pair generated in {:?}ms", start.elapsed().as_millis());
 
         let session_id = Uuid::new_v4();
         let session_expiry = SystemTime::now().add(Duration::from_secs(30));
 
         let token = PreAuthToken {
-            session_id: session_id,
+            session_id,
             expiry_s: session_expiry
                 .duration_since(UNIX_EPOCH)
                 .map_err(|error| {
@@ -43,12 +47,14 @@ where
                 .as_secs(),
         };
 
+        let start = Instant::now();
         let (encrypted_token, shared_secret) = key_pair
             .encrypt_with_secret(&token.to_bytes(), &client_pub_key)
             .map_err(|error| {
                 log::error!("Failed to encrypt token {}", error);
                 DomainError::EncryptionError("Failed to encrypt token".to_string())
             })?;
+        log::info!("Token encrypted in {:?}ms", start.elapsed().as_millis());
 
         let session = CachedSession {
             id: token.session_id,

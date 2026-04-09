@@ -1140,10 +1140,9 @@ version = "0.1.0"
 dependencies = [
  "aes-gcm",
  "base64",
- "pqc_kyber",
- "pqcrypto-sphincsplus",
+ "pqcrypto-dilithium",
+ "pqcrypto-kyber",
  "pqcrypto-traits",
- "rand 0.8.5",
  "thiserror 2.0.18",
 ]
 
@@ -1483,14 +1482,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "pqc_kyber"
-version = "0.7.1"
+name = "pqcrypto-dilithium"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b23e1823e8a78ad67990c5cb843d5eba75ab3b8a44d041f3814fde89463dc6f"
+checksum = "685de0fa68c6786559d5fcdaa414f0cd68ef3f5d162f61823bd7424cd276726f"
 dependencies = [
  "cc",
- "rand_core 0.6.4",
- "sha2",
+ "glob",
+ "libc",
+ "pqcrypto-internals",
+ "pqcrypto-traits",
 ]
 
 [[package]]
@@ -1506,10 +1507,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "pqcrypto-sphincsplus"
-version = "0.7.2"
+name = "pqcrypto-kyber"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f6ff8925443869aab1332bb8b0fe3b75cf113516bccf05da4dc71bc33162252"
+checksum = "15c00293cf898859d0c771455388054fd69ab712263c73fdc7f287a39b1ba000"
 dependencies = [
  "cc",
  "glob",

@@ -1,6 +1,7 @@
 use crate::domain::Application;
 use crate::domain::errors::routes::DomainError;
-use crate::ports::services::cache::{Cache, CachedSession};
+use crate::domain::session::Session;
+use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::PWStore;
 use contracts::token::PreAuthToken;
 use kyber_crypto::keys::KeyPair;
@@ -14,14 +15,18 @@ where
     pub fn check_pre_auth_token(
         &self,
         token: &String,
-        session: &CachedSession,
-        key_pair: &KeyPair,
+        session: &Session,
     ) -> Result<PreAuthToken, DomainError> {
-        let token_bytes = key_pair
-            .decrypt_with_secret_from_b64(token, &session.token_key, &key_pair.public)
+        let token_bytes = session
+            .server_key_pair
+            .decrypt_with_secret_from_b64(
+                token,
+                &session.token_key,
+                &session.server_key_pair.public,
+            )
             .map_err(|error| {
                 log::info!("Unable to decrypt token: {:?}", error);
-                DomainError::PermissionError("Invalid Token".to_string())
+                DomainError::DecryptionError("Invalid Token".to_string())
             })?;
         let token = PreAuthToken::from_bytes(&token_bytes);
         if token.session_id != session.id {

@@ -6,6 +6,7 @@ use axum::Json;
 use contracts::{GenericRequest, GenericResponse};
 use http::StatusCode;
 use std::sync::Arc;
+use std::time::Instant;
 
 pub async fn run<C, PW>(
     app: Arc<Application<C, PW>>,
@@ -16,8 +17,12 @@ where
     PW: PWStore + Send + Sync,
 {
     log::info!("New user request");
-    match app.create_user(payload).await {
+    let start = Instant::now();
+    let response = match app.create_user(payload).await {
         Ok(result) => Ok(Json(result)),
         Err(error) => Err(map_domain_error(error)),
-    }
+    };
+    log::info!("New user request finished took {:?}ms", start.elapsed().as_millis());
+
+    response
 }
