@@ -4,5 +4,5 @@ pub mod secret;
 pub mod traits;
 
 pub use crate::message::EncryptedMessage;
-pub use pair::KeyError;
+pub use pair::CryptoError;
 pub use pair::KeyPair;

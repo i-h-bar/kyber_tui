@@ -1,4 +1,4 @@
-use kyber_crypto::keys::KeyError;
+use kyber_crypto::keys::CryptoError;
 use kyber_crypto::keys::traits::{TryFromBytes, TryToBytes};
 use uuid::Uuid;
 
@@ -8,7 +8,7 @@ pub struct PreAuthToken {
 }
 
 impl TryToBytes for PreAuthToken {
-    fn to_bytes(&self) -> Result<Vec<u8>, KeyError> {
+    fn to_bytes(&self) -> Result<Vec<u8>, CryptoError> {
         let mut buff = Vec::new();
         buff.extend_from_slice(self.session_id.as_bytes());
         buff.extend_from_slice(self.expiry_s.to_be_bytes().as_ref());
@@ -18,19 +18,19 @@ impl TryToBytes for PreAuthToken {
 }
 
 impl TryFromBytes for PreAuthToken {
-    fn from_bytes(bytes: &[u8]) -> Result<Self, KeyError> {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, CryptoError> {
         let session_id = Uuid::from_slice(
-            &bytes
+            bytes
                 .get(..16)
-                .ok_or_else(|| KeyError::DeserialisationFailed)?,
+                .ok_or(CryptoError::DeserialisationFailed)?,
         )
-        .map_err(|_| KeyError::DeserialisationFailed)?;
+        .map_err(|_| CryptoError::DeserialisationFailed)?;
         let expiry_s = u64::from_be_bytes(
             bytes
                 .get(16..)
-                .ok_or_else(|| KeyError::DeserialisationFailed)?
+                .ok_or(CryptoError::DeserialisationFailed)?
                 .try_into()
-                .map_err(|_| KeyError::DeserialisationFailed)?,
+                .map_err(|_| CryptoError::DeserialisationFailed)?,
         );
 
         Ok(Self {

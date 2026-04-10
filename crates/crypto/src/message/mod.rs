@@ -1,7 +1,7 @@
-use base64::Engine;
-use base64::engine::general_purpose::STANDARD;
-use serde::{Deserializer, Serializer, de};
+use serde::{Deserializer, Serializer, de, ser};
 use thiserror::Error;
+use crate::keys::CryptoError;
+use crate::keys::traits::{TryFromBytes, TryToBytes};
 
 #[derive(Error, Debug)]
 pub enum EncryptedMessageError {
@@ -15,50 +15,42 @@ pub struct EncryptedMessage {
     pub signed_ciphertext: Vec<u8>,
 }
 
-impl EncryptedMessage {
-    /// Serialize to bytes: [kyber: 768][nonce: 12][`signed_ciphertext`: rest]
-    #[must_use]
-    pub fn to_bytes(&self) -> Vec<u8> {
+impl TryToBytes for EncryptedMessage {
+    fn to_bytes(&self) -> Result<Vec<u8>, CryptoError> {
         let mut buf = Vec::with_capacity(780 + self.signed_ciphertext.len());
         buf.extend_from_slice(&self.kem_ciphertext);
         buf.extend_from_slice(&self.nonce);
         buf.extend_from_slice(&self.signed_ciphertext);
-        buf
-    }
 
-    /// Deserialize from bytes produced by `to_bytes`.
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self, EncryptedMessageError> {
+        Ok(buf)
+    }
+}
+
+impl TryFromBytes for EncryptedMessage {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, CryptoError> {
         if bytes.len() < 780 {
-            return Err(EncryptedMessageError::DeserialisationError);
+            return Err(CryptoError::DeserialisationFailed);
         }
         Ok(EncryptedMessage {
-            kem_ciphertext: bytes[..768]
+            kem_ciphertext: bytes.get(..768)
+                .ok_or(CryptoError::DeserialisationFailed)?
                 .try_into()
-                .map_err(|_| EncryptedMessageError::DeserialisationError)?,
-            nonce: bytes[768..780]
+                .map_err(|_| CryptoError::DeserialisationFailed)?,
+            nonce: bytes.get(768..780)
+                .ok_or(CryptoError::DeserialisationFailed)?
                 .try_into()
-                .map_err(|_| EncryptedMessageError::DeserialisationError)?,
-            signed_ciphertext: bytes[780..].to_vec(),
+                .map_err(|_| CryptoError::DeserialisationFailed)?,
+            signed_ciphertext: bytes
+                .get(780..)
+                .ok_or(CryptoError::DeserialisationFailed)?
+                .to_vec(),
         })
-    }
-
-    #[must_use]
-    pub fn to_b64(&self) -> String {
-        STANDARD.encode(self.to_bytes())
-    }
-
-    pub fn from_b64(base64: &str) -> Result<Self, EncryptedMessageError> {
-        let bytes = STANDARD
-            .decode(base64)
-            .map_err(|_| EncryptedMessageError::DeserialisationError)?;
-
-        Self::from_bytes(&bytes)
     }
 }
 
 impl serde::Serialize for EncryptedMessage {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_bytes(&self.to_bytes())
+        serializer.serialize_bytes(&self.to_bytes().map_err(ser::Error::custom)?)
     }
 }
 

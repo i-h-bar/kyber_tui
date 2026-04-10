@@ -1,9 +1,9 @@
-use crate::keys::KeyError;
+use crate::keys::CryptoError;
 
 pub trait TryToBytes {
-    fn to_bytes(&self) -> Result<Vec<u8>, KeyError>;
+    fn to_bytes(&self) -> Result<Vec<u8>, CryptoError>;
 }
 
 pub trait TryFromBytes: Sized {
-    fn from_bytes(bytes: &[u8]) -> Result<Self, KeyError>;
+    fn from_bytes(bytes: &[u8]) -> Result<Self, CryptoError>;
 }

@@ -7,7 +7,8 @@ members =[
 resolver = "2"
 
 [workspace.lints.clippy]
-pedantic = "warn"
+pedantic = { level = "warn", priority = -1 }
+missing_errors_doc = "allow"
 
 [workspace.dependencies]
 kyber_crypto = { path="crates/crypto" }

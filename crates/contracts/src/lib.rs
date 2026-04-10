@@ -1,6 +1,6 @@
 use kyber_crypto::keys::public::Public;
 use kyber_crypto::keys::traits::TryFromBytes;
-use kyber_crypto::keys::{KeyError, KeyPair};
+use kyber_crypto::keys::{CryptoError, KeyPair};
 use kyber_crypto::message::EncryptedMessage;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -21,7 +21,7 @@ impl GenericRequest {
         &self,
         key_pair: &KeyPair,
         public: &Public,
-    ) -> Result<T, KeyError> {
+    ) -> Result<T, CryptoError> {
         key_pair.decrypt(&self.body, public)
     }
 
@@ -29,7 +29,7 @@ impl GenericRequest {
         &self,
         key_pair: &KeyPair,
         public: &Public,
-    ) -> Result<T, KeyError> {
+    ) -> Result<T, CryptoError> {
         key_pair.decrypt(&self.token, public)
     }
 }
@@ -45,7 +45,7 @@ impl GenericResponse {
         &self,
         key_pair: &KeyPair,
         public: &Public,
-    ) -> Result<T, KeyError> {
+    ) -> Result<T, CryptoError> {
         key_pair.decrypt(&self.body, public)
     }
 
@@ -53,7 +53,7 @@ impl GenericResponse {
         &self,
         key_pair: &KeyPair,
         public: &Public,
-    ) -> Result<T, KeyError> {
+    ) -> Result<T, CryptoError> {
         key_pair.decrypt(&self.token, public)
     }
 }
