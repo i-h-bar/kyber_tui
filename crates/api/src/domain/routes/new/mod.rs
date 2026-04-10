@@ -23,9 +23,8 @@ where
         let session = self.cache.load_session(&request.session_id).await?;
         self.check_pre_auth_token(&request.token, &session)?;
 
-        let new_user: NewUserRequest = session
-            .server_key_pair
-            .decrypt(&request.body, &session.client_public_key)
+        let new_user: NewUserRequest = request
+            .get_message(&session.server_key_pair, &session.client_public_key)
             .map_err(|err| {
                 log::warn!("Error decrypting message {}", err);
                 DomainError::DecryptionError("Error decrypting message".to_string())
