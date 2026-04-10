@@ -4,9 +4,9 @@ use crate::domain::session::Session;
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::PWStore;
 use contracts::token::PreAuthToken;
+use kyber_crypto::keys::traits::TryFromBytes;
 use kyber_crypto::keys::{EncryptedMessage, KeyPair};
 use std::time::{SystemTime, UNIX_EPOCH};
-use kyber_crypto::keys::traits::FromBytes;
 
 impl<C, PW> Application<C, PW>
 where
@@ -20,11 +20,7 @@ where
     ) -> Result<PreAuthToken, DomainError> {
         let token: PreAuthToken = session
             .server_key_pair
-            .decrypt_with_secret(
-                token,
-                &session.token_key,
-                &session.server_key_pair.public,
-            )
+            .decrypt_with_secret(token, &session.token_key, &session.server_key_pair.public)
             .map_err(|error| {
                 log::info!("Unable to decrypt token: {:?}", error);
                 DomainError::DecryptionError("Invalid Token".to_string())

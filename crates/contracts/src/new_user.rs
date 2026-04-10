@@ -1,5 +1,6 @@
+use kyber_crypto::keys::KeyError;
+use kyber_crypto::keys::traits::{TryFromBytes, TryToBytes};
 use serde::{Deserialize, Serialize};
-use kyber_crypto::keys::traits::{DeserialisationError, FromBytes, ToBytes};
 
 #[derive(Serialize, Deserialize)]
 pub struct NewUserRequest {
@@ -12,28 +13,26 @@ pub struct NewUserResponse {
     pub success: bool,
 }
 
-
-impl ToBytes for NewUserResponse {
-    fn to_bytes(&self) -> Vec<u8> {
-        serde_json::to_vec(self).unwrap()
+impl TryToBytes for NewUserResponse {
+    fn to_bytes(&self) -> Result<Vec<u8>, KeyError> {
+        Ok(serde_json::to_vec(self).map_err(|_| KeyError::SerializationFailed)?)
     }
 }
 
-impl FromBytes for NewUserResponse {
-    fn from_bytes(bytes: &[u8]) -> Result<Self, DeserialisationError> {
-        serde_json::from_slice(bytes).map_err(|_| DeserialisationError)
+impl TryFromBytes for NewUserResponse {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, KeyError> {
+        serde_json::from_slice(bytes).map_err(|_| KeyError::DeserialisationFailed)
     }
 }
 
-impl ToBytes for NewUserRequest {
-    fn to_bytes(&self) -> Vec<u8> {
-        serde_json::to_vec(self).unwrap()
+impl TryToBytes for NewUserRequest {
+    fn to_bytes(&self) -> Result<Vec<u8>, KeyError> {
+        Ok(serde_json::to_vec(self).map_err(|_| KeyError::SerializationFailed)?)
     }
 }
 
-impl FromBytes for NewUserRequest {
-    fn from_bytes(bytes: &[u8]) -> Result<Self, DeserialisationError> {
-        serde_json::from_slice(bytes).map_err(|_| DeserialisationError)
+impl TryFromBytes for NewUserRequest {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, KeyError> {
+        serde_json::from_slice(bytes).map_err(|_| KeyError::DeserialisationFailed)
     }
 }
-

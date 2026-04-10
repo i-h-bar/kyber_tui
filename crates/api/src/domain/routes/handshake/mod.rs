@@ -8,7 +8,6 @@ use contracts::token::PreAuthToken;
 use kyber_crypto::keys::pair::KeyPair;
 use std::ops::Add;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tokio::time::Instant;
 use uuid::Uuid;
 
 impl<C, PW> Application<C, PW>
@@ -21,13 +20,10 @@ where
         payload: HandshakeRequest,
     ) -> Result<HandshakeResponse, DomainError> {
         let client_public_key = payload.pub_key;
-
-        let start = Instant::now();
         let server_key_pair = KeyPair::generate().map_err(|error| {
             log::error!("Failed to generate key pair {}", error);
             DomainError::KeyError("Failed to generate key pair".to_string())
         })?;
-        log::info!("Key pair generated in {:?}ms", start.elapsed().as_millis());
 
         let session_id = Uuid::new_v4();
         let session_expiry = SystemTime::now().add(Duration::from_secs(30));
@@ -43,14 +39,12 @@ where
                 .as_secs(),
         };
 
-        let start = Instant::now();
         let (encrypted_token, shared_secret) = server_key_pair
             .encrypt_with_secret(&token, &client_public_key)
             .map_err(|error| {
                 log::error!("Failed to encrypt token {}", error);
                 DomainError::EncryptionError("Failed to encrypt token".to_string())
             })?;
-        log::info!("Token encrypted in {:?}ms", start.elapsed().as_millis());
 
         let session = Session {
             id: token.session_id,

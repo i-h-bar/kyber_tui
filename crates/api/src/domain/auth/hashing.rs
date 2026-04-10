@@ -1,12 +1,12 @@
-use std::time::Instant;
-use argon2::{
-    Argon2,
-    password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
-};
 use crate::domain::Application;
 use crate::domain::errors::routes::DomainError;
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::PWStore;
+use argon2::{
+    Argon2,
+    password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
+};
+use std::time::Instant;
 
 impl<C, PW> Application<C, PW>
 where
@@ -25,12 +25,14 @@ where
                     DomainError::GenericError("Error hashing password".to_string())
                 })?
                 .to_string())
-        }).await.map_err(| error | {
+        })
+        .await
+        .map_err(|error| {
             log::error!("Tokio error {}", error);
             DomainError::GenericError("Tokio error".to_string())
         })?;
         log::info!("Hashing password took {:?}ms", start.elapsed().as_millis());
-        
+
         hash
     }
 }

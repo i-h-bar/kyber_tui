@@ -1,4 +1,5 @@
 use crate::domain::errors::routes::DomainError;
+use crate::domain::session::Session;
 use crate::ports::services::cache::Cache;
 use async_trait::async_trait;
 use redis::aio::MultiplexedConnection;
@@ -6,7 +7,6 @@ use redis::{AsyncCommands, Client, RedisError, SetExpiry, SetOptions};
 use sqlx::postgres::PgTypeKind::Domain;
 use std::env;
 use uuid::Uuid;
-use crate::domain::session::Session;
 
 pub struct RedisCache {
     connection: MultiplexedConnection,

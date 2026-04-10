@@ -1,5 +1,6 @@
 use crate::keys::public::{PUBLIC_KEY_SIZE, Public};
 use crate::keys::secret::{SECRET_KEY_SIZE, Secret};
+use crate::keys::traits::{TryFromBytes, TryToBytes};
 use crate::message::EncryptedMessage;
 use aes_gcm::aead::rand_core::RngCore;
 use aes_gcm::aead::{Aead, OsRng};
@@ -12,7 +13,6 @@ use pqcrypto_traits::kem::{Ciphertext as KemCiphertext, SharedSecret as KemShare
 use pqcrypto_traits::sign::SignedMessage;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use crate::keys::traits::{FromBytes, ToBytes};
 
 pub const KEY_PAIR_SIZE: usize = SECRET_KEY_SIZE + PUBLIC_KEY_SIZE;
 
@@ -32,6 +32,8 @@ pub enum KeyError {
     VerificationFailed,
     #[error("deserialization failed")]
     DeserialisationFailed,
+    #[error("serialization failed")]
+    SerializationFailed,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -53,12 +55,12 @@ impl KeyPair {
     }
 
     /// Encrypt `plaintext` for `recipient`, signing it with this keypair. Returning the encrypted message & shared secret
-    pub fn encrypt_with_secret<T: ToBytes>(
+    pub fn encrypt_with_secret<T: TryToBytes>(
         &self,
         plaintext: &T,
         recipient: &Public,
     ) -> Result<(EncryptedMessage, [u8; 32]), KeyError> {
-        self.encrypt_raw(plaintext.to_bytes().as_slice(), recipient)
+        self.encrypt_raw(plaintext.to_bytes()?.as_slice(), recipient)
     }
 
     /// Encrypt `plaintext` for `recipient`, signing it with this keypair.
@@ -100,13 +102,22 @@ impl KeyPair {
             shared_secret,
         ))
     }
-    
-    pub fn encrypt<T: ToBytes>(&self, obj: &T, recipient: &Public) -> Result<EncryptedMessage, KeyError> {
-        self.encrypt_raw(&obj.to_bytes(), recipient).map(|(encrypted_message, _)| encrypted_message)
+
+    pub fn encrypt<T: TryToBytes>(
+        &self,
+        obj: &T,
+        recipient: &Public,
+    ) -> Result<EncryptedMessage, KeyError> {
+        self.encrypt_raw(obj.to_bytes()?.as_slice(), recipient)
+            .map(|(encrypted_message, _)| encrypted_message)
     }
 
     /// Decrypt an `EncryptedMessage`, verifying it was signed by `sender`.
-    pub fn decrypt_raw(&self, msg: &EncryptedMessage, sender: &Public) -> Result<Vec<u8>, KeyError> {
+    pub fn decrypt_raw(
+        &self,
+        msg: &EncryptedMessage,
+        sender: &Public,
+    ) -> Result<Vec<u8>, KeyError> {
         let signed_message = SignedMessage::from_bytes(&msg.signed_ciphertext)
             .map_err(|_| KeyError::DeserialisationFailed)?;
         let aes_ciphertext = dilithium3::open(&signed_message, sender.signing())
@@ -126,14 +137,18 @@ impl KeyPair {
             .decrypt(Nonce::from_slice(&msg.nonce), aes_ciphertext.as_ref())
             .map_err(|_| KeyError::DecryptionFailed)
     }
-    
-    pub fn decrypt<T: FromBytes>(&self, msg: &EncryptedMessage, sender: &Public) -> Result<T, KeyError> {
+
+    pub fn decrypt<T: TryFromBytes>(
+        &self,
+        msg: &EncryptedMessage,
+        sender: &Public,
+    ) -> Result<T, KeyError> {
         let bytes = self.decrypt_raw(msg, sender)?;
-        
+
         T::from_bytes(&bytes).map_err(|_| KeyError::DeserialisationFailed)
     }
 
-    pub fn decrypt_with_secret<T: FromBytes>(
+    pub fn decrypt_with_secret<T: TryFromBytes>(
         &self,
         msg: &EncryptedMessage,
         secret: &[u8; 32],
@@ -148,7 +163,7 @@ impl KeyPair {
         let bytes = cipher
             .decrypt(Nonce::from_slice(&msg.nonce), aes_ciphertext.as_ref())
             .map_err(|_| KeyError::DecryptionFailed)?;
-        
+
         T::from_bytes(&bytes).map_err(|_| KeyError::DeserialisationFailed)
     }
 }

@@ -1,6 +1,6 @@
+use kyber_crypto::message::EncryptedMessage;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use kyber_crypto::message::EncryptedMessage;
 
 pub mod handshake;
 pub mod new_user;

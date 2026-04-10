@@ -1,13 +1,9 @@
-use thiserror::Error;
+use crate::keys::KeyError;
 
-#[derive(Error, Debug)]
-#[error("Deserialisation failed")]
-pub struct DeserialisationError;
-
-pub trait ToBytes {
-    fn to_bytes(&self) -> Vec<u8>;
+pub trait TryToBytes {
+    fn to_bytes(&self) -> Result<Vec<u8>, KeyError>;
 }
 
-pub trait FromBytes: Sized {
-    fn from_bytes(bytes: &[u8]) -> Result<Self, DeserialisationError>;
+pub trait TryFromBytes: Sized {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, KeyError>;
 }

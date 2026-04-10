@@ -1,7 +1,7 @@
+use contracts::GenericRequest;
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
 use contracts::new_user::NewUserRequest;
 use contracts::token::PreAuthToken;
-use contracts::GenericRequest;
 use dotenv::dotenv;
 use kyber_crypto::keys::pair::KeyPair;
 use std::env;
@@ -38,9 +38,7 @@ async fn main() {
     println!("{}", token.session_id);
     let new_user_request = GenericRequest {
         session_id: token.session_id,
-        body: key_pair
-            .encrypt(&new_user, &server_pub_key)
-            .unwrap(),
+        body: key_pair.encrypt(&new_user, &server_pub_key).unwrap(),
         token: response.token,
     };
 

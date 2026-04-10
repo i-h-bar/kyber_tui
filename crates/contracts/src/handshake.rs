@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
 use kyber_crypto::keys::EncryptedMessage;
 use kyber_crypto::keys::public::Public;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
 pub struct HandshakeRequest {
