@@ -1,6 +1,6 @@
-use serde::{de, ser, Deserializer, Serializer};
 use crate::keys::CryptoError;
 use crate::traits::{TryFromBytes, TryToBytes};
+use serde::{Deserializer, Serializer, de, ser};
 
 pub mod keys;
 pub mod traits;
@@ -28,11 +28,13 @@ impl TryFromBytes for EncryptedMessage {
             return Err(CryptoError::DeserialisationFailed);
         }
         Ok(EncryptedMessage {
-            kem_ciphertext: bytes.get(..768)
+            kem_ciphertext: bytes
+                .get(..768)
                 .ok_or(CryptoError::DeserialisationFailed)?
                 .try_into()
                 .map_err(|_| CryptoError::DeserialisationFailed)?,
-            nonce: bytes.get(768..780)
+            nonce: bytes
+                .get(768..780)
                 .ok_or(CryptoError::DeserialisationFailed)?
                 .try_into()
                 .map_err(|_| CryptoError::DeserialisationFailed)?,

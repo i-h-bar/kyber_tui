@@ -22,10 +22,7 @@ where
         Ok(result) => Ok(Json(result)),
         Err(error) => Err(map_domain_error(&error)),
     };
-    log::info!(
-        "New user request finished took {:?}",
-        start.elapsed()
-    );
+    log::info!("New user request finished took {:?}", start.elapsed());
 
     response
 }

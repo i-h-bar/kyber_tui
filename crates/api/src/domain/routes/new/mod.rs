@@ -1,10 +1,10 @@
+use crate::domain::errors::routes::DomainError;
 use crate::domain::{Application, auth};
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::{CreateUser, PWStore};
 use contracts::new_user::{NewUserRequest, NewUserResponse};
 use contracts::{GenericRequest, GenericResponse};
 use uuid::Uuid;
-use crate::domain::errors::routes::DomainError;
 
 impl<C, PW> Application<C, PW>
 where

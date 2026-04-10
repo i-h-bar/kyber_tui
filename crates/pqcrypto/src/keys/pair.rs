@@ -1,7 +1,7 @@
+use crate::EncryptedMessage;
 use crate::keys::public::{PUBLIC_KEY_SIZE, Public};
 use crate::keys::secret::{SECRET_KEY_SIZE, Secret};
 use crate::traits::{TryFromBytes, TryToBytes};
-use crate::EncryptedMessage;
 use aes_gcm::aead::rand_core::RngCore;
 use aes_gcm::aead::{Aead, OsRng};
 use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
@@ -157,7 +157,8 @@ impl KeyPair {
         let aes_ciphertext = dilithium3::open(&signed_message, sender.signing())
             .map_err(|_| CryptoError::VerificationFailed)?;
 
-        let cipher = Aes256Gcm::new_from_slice(secret).map_err(|_| CryptoError::DecryptionFailed)?;
+        let cipher =
+            Aes256Gcm::new_from_slice(secret).map_err(|_| CryptoError::DecryptionFailed)?;
         let bytes = cipher
             .decrypt(Nonce::from_slice(&msg.nonce), aes_ciphertext.as_ref())
             .map_err(|_| CryptoError::DecryptionFailed)?;

@@ -1,18 +1,20 @@
-use argon2::{Argon2, PasswordHash, PasswordVerifier};
-use contracts::{GenericRequest, GenericResponse};
-use contracts::auth::{AuthRequest, AuthResponse};
-use contracts::token::AuthToken;
-use crate::domain::{Application, auth};
 use crate::domain::errors::routes::DomainError;
+use crate::domain::{Application, auth};
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::PWStore;
+use contracts::auth::{AuthRequest, AuthResponse};
+use contracts::token::AuthToken;
+use contracts::{GenericRequest, GenericResponse};
 
 impl<C, PW> Application<C, PW>
 where
     C: Cache + Send + Sync,
     PW: PWStore + Send + Sync,
 {
-    pub async fn authenticate(&self, request: GenericRequest) -> Result<GenericResponse, DomainError> {
+    pub async fn authenticate(
+        &self,
+        request: GenericRequest,
+    ) -> Result<GenericResponse, DomainError> {
         let mut session = self.cache.load_session(&request.session_id).await?;
         let token = auth::token::check_pre_auth_token(&request.token, &session)?;
 
@@ -24,7 +26,10 @@ where
             })?;
 
         let auth_credentials = self.pw_store.get_auth_credentials(&body.username).await?;
-        if !self.verify_pw_hash(body.password.clone(), auth_credentials.pw_hash.clone()).await? {
+        if !self
+            .verify_pw_hash(body.password.clone(), auth_credentials.pw_hash.clone())
+            .await?
+        {
             log::info!("Authentication credentials not verified");
             return Err(DomainError::Permission("Invalid password".to_string()));
         }
@@ -40,11 +45,15 @@ where
             user_id: auth_credentials.id,
         };
 
-        Ok(
-            GenericResponse {
-                body: session.server_key_pair.encrypt(&auth_return, &session.client_public_key).unwrap(),
-                token: session.server_key_pair.encrypt(&token, &session.client_public_key).unwrap()
-            }
-        )
+        Ok(GenericResponse {
+            body: session
+                .server_key_pair
+                .encrypt(&auth_return, &session.client_public_key)
+                .unwrap(),
+            token: session
+                .server_key_pair
+                .encrypt(&token, &session.client_public_key)
+                .unwrap(),
+        })
     }
 }

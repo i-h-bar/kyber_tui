@@ -19,12 +19,9 @@ impl TryToBytes for PreAuthToken {
 
 impl TryFromBytes for PreAuthToken {
     fn from_bytes(bytes: &[u8]) -> Result<Self, CryptoError> {
-        let session_id = Uuid::from_slice(
-            bytes
-                .get(..16)
-                .ok_or(CryptoError::DeserialisationFailed)?,
-        )
-        .map_err(|_| CryptoError::DeserialisationFailed)?;
+        let session_id =
+            Uuid::from_slice(bytes.get(..16).ok_or(CryptoError::DeserialisationFailed)?)
+                .map_err(|_| CryptoError::DeserialisationFailed)?;
         let expiry_s = u64::from_be_bytes(
             bytes
                 .get(16..)
@@ -40,13 +37,11 @@ impl TryFromBytes for PreAuthToken {
     }
 }
 
-
 pub struct AuthToken {
     pub session_id: Uuid,
     pub user_id: Uuid,
     pub expiry_s: u64,
 }
-
 
 impl TryToBytes for AuthToken {
     fn to_bytes(&self) -> Result<Vec<u8>, CryptoError> {
@@ -61,15 +56,15 @@ impl TryToBytes for AuthToken {
 
 impl TryFromBytes for AuthToken {
     fn from_bytes(bytes: &[u8]) -> Result<Self, CryptoError> {
-        let session_id = Uuid::from_slice(
+        let session_id =
+            Uuid::from_slice(bytes.get(..16).ok_or(CryptoError::DeserialisationFailed)?)
+                .map_err(|_| CryptoError::DeserialisationFailed)?;
+        let user_id = Uuid::from_slice(
             bytes
-                .get(..16)
+                .get(16..32)
                 .ok_or(CryptoError::DeserialisationFailed)?,
         )
-            .map_err(|_| CryptoError::DeserialisationFailed)?;
-        let user_id = Uuid::from_slice(
-            bytes.get(16..32).ok_or(CryptoError::DeserialisationFailed)?,
-        ).map_err(|_| CryptoError::DeserialisationFailed)?;
+        .map_err(|_| CryptoError::DeserialisationFailed)?;
         let expiry_s = u64::from_be_bytes(
             bytes
                 .get(32..)

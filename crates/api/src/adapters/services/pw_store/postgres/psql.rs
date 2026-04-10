@@ -1,3 +1,6 @@
+use crate::adapters::services::pw_store::postgres::queries::auth::GET_AUTH_CREDENTIALS;
+use crate::adapters::services::pw_store::postgres::queries::create_user::CREATE_USER;
+use crate::domain::errors::routes::DomainError;
 use crate::ports::services::pw_store::{AuthCredentials, CreateUser, PWStore};
 use async_trait::async_trait;
 use sqlx::postgres::PgPoolOptions;
@@ -5,9 +8,6 @@ use sqlx::{Pool, Row};
 use std::env;
 use std::time::Instant;
 use uuid::Uuid;
-use crate::adapters::services::pw_store::postgres::queries::auth::GET_AUTH_CREDENTIALS;
-use crate::adapters::services::pw_store::postgres::queries::create_user::CREATE_USER;
-use crate::domain::errors::routes::DomainError;
 
 pub struct Postgres {
     pool: Pool<sqlx::Postgres>,
@@ -50,7 +50,7 @@ impl PWStore for Postgres {
             .bind(username)
             .fetch_one(&self.pool)
             .await
-            .map_err(| error | {
+            .map_err(|error| {
                 log::warn!("Failed to fetch auth credentials {error}");
                 DomainError::Generic("Unable to fetch auth credentials".to_string())
             });

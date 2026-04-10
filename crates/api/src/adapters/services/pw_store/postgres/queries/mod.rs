@@ -1,2 +1,2 @@
-pub mod create_user;
 pub mod auth;
+pub mod create_user;

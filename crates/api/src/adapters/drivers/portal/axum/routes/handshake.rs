@@ -24,10 +24,7 @@ where
         Err(error) => Err(map_domain_error(&error)),
     };
 
-    log::info!(
-        "Handshake finished took {:?}",
-        start.elapsed()
-    );
+    log::info!("Handshake finished took {:?}", start.elapsed());
 
     response
 }

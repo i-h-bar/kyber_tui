@@ -1,6 +1,6 @@
-use serde::{Deserialize, Serialize};
 use pqcrypto::keys::CryptoError;
 use pqcrypto::traits::{TryFromBytes, TryToBytes};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct AuthRequest {

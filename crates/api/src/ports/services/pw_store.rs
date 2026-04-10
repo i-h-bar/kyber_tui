@@ -1,7 +1,6 @@
+use crate::domain::errors::routes::DomainError;
 use async_trait::async_trait;
 use uuid::Uuid;
-use crate::domain::errors::routes::DomainError;
-
 
 pub struct CreateUser {
     pub id: Uuid,

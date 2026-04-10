@@ -1,11 +1,10 @@
-use contracts::{GenericRequest, GenericResponse};
+use contracts::auth::AuthRequest;
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
-use contracts::new_user::NewUserRequest;
 use contracts::token::PreAuthToken;
+use contracts::{GenericRequest};
 use dotenv::dotenv;
 use pqcrypto::keys::pair::KeyPair;
 use std::env;
-use contracts::auth::AuthRequest;
 
 #[tokio::main]
 async fn main() {
