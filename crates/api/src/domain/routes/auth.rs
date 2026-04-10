@@ -34,10 +34,6 @@ where
             return Err(DomainError::Permission("Invalid password".to_string()));
         }
 
-        session.user_id = Some(auth_credentials.id);
-
-        self.cache.save_session(&session).await?;
-
         let auth_return = AuthResponse { success: true };
         let token = AuthToken {
             session_id: token.session_id,
@@ -45,15 +41,25 @@ where
             user_id: auth_credentials.id,
         };
 
-        Ok(GenericResponse {
-            body: session
-                .server_key_pair
-                .encrypt(&auth_return, &session.client_public_key)
-                .unwrap(),
-            token: session
-                .server_key_pair
-                .encrypt(&token, &session.client_public_key)
-                .unwrap(),
-        })
+        let body = session
+            .server_key_pair
+            .encrypt(&auth_return, &session.client_public_key)
+            .map_err(|error| {
+                log::warn!("Error encrypting message {error}");
+                DomainError::Encryption("Error encrypting message".to_string())
+            })?;
+
+        let token = session
+            .server_key_pair
+            .encrypt(&token, &session.client_public_key)
+            .map_err(|error| {
+                log::warn!("Error encrypting message {error}");
+                DomainError::Encryption("Error encrypting message".to_string())
+            })?;
+
+        session.user_id = Some(auth_credentials.id);
+        self.cache.save_session(&session).await?;
+
+        Ok(GenericResponse { body, token })
     }
 }
