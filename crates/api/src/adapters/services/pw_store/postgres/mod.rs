@@ -1,2 +1,2 @@
 pub mod psql;
-mod queries;
+pub mod queries;

@@ -1,10 +1,13 @@
-use crate::adapters::services::pw_store::postgres::queries::CREATE_USER;
-use crate::ports::services::pw_store::{CreateUser, PWStore, PWStoreError};
+use crate::ports::services::pw_store::{AuthCredentials, CreateUser, PWStore};
 use async_trait::async_trait;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Row};
 use std::env;
+use std::time::Instant;
 use uuid::Uuid;
+use crate::adapters::services::pw_store::postgres::queries::auth::GET_AUTH_CREDENTIALS;
+use crate::adapters::services::pw_store::postgres::queries::create_user::CREATE_USER;
+use crate::domain::errors::routes::DomainError;
 
 pub struct Postgres {
     pool: Pool<sqlx::Postgres>,
@@ -28,7 +31,7 @@ impl PWStore for Postgres {
         Self { pool }
     }
 
-    async fn create_user(&self, user_info: CreateUser) -> Result<Uuid, PWStoreError> {
+    async fn create_user(&self, user_info: CreateUser) -> Result<Uuid, DomainError> {
         match sqlx::query(CREATE_USER)
             .bind(user_info.id)
             .bind(user_info.username)
@@ -36,8 +39,23 @@ impl PWStore for Postgres {
             .fetch_one(&self.pool)
             .await
         {
-            Ok(row) => Ok(row.get::<Uuid, &str>("id")),
-            Err(_) => Err(PWStoreError::UserCreationError),
+            Ok(row) => Ok(row.get("id")),
+            Err(_) => Err(DomainError::Generic("Unable to create user".to_string())),
         }
+    }
+
+    async fn get_auth_credentials(&self, username: &str) -> Result<AuthCredentials, DomainError> {
+        let start = Instant::now();
+        let result = sqlx::query_as::<_, AuthCredentials>(GET_AUTH_CREDENTIALS)
+            .bind(username)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(| error | {
+                log::warn!("Failed to fetch auth credentials {error}");
+                DomainError::Generic("Unable to fetch auth credentials".to_string())
+            });
+
+        log::info!("Fetching auth credentials took {:?}", start.elapsed());
+        result
     }
 }

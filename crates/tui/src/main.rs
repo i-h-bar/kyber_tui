@@ -5,6 +5,7 @@ use contracts::token::PreAuthToken;
 use dotenv::dotenv;
 use pqcrypto::keys::pair::KeyPair;
 use std::env;
+use contracts::auth::AuthRequest;
 
 #[tokio::main]
 async fn main() {
@@ -30,7 +31,7 @@ async fn main() {
     let server_pub_key = response.public_key;
     let token: PreAuthToken = key_pair.decrypt(&response.token, &server_pub_key).unwrap();
 
-    let new_user = NewUserRequest {
+    let new_user = AuthRequest {
         username: "Other Username".to_string(),
         password: env::var("PASSWORD").unwrap(),
     };
@@ -43,7 +44,7 @@ async fn main() {
     };
 
     let new_user_response = client
-        .post("http://localhost:3000/new")
+        .post("http://localhost:3000/auth")
         .json(&new_user_request)
         .send()
         .await
@@ -51,5 +52,5 @@ async fn main() {
 
     println!("Response: {:?}", &new_user_response);
 
-    let new_user_response = new_user_response.json::<GenericResponse>().await.unwrap();
+    // let new_user_response = new_user_response.json::<GenericResponse>().await.unwrap();
 }

@@ -23,8 +23,8 @@ where
         Err(error) => Err(map_domain_error(&error)),
     };
     log::info!(
-        "New user request finished took {:?}ms",
-        start.elapsed().as_millis()
+        "New user request finished took {:?}",
+        start.elapsed()
     );
 
     response

@@ -2,10 +2,7 @@ use crate::domain::Application;
 use crate::domain::errors::routes::DomainError;
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::PWStore;
-use argon2::{
-    Argon2,
-    password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
-};
+use argon2::{Argon2, password_hash::{PasswordHasher, SaltString, rand_core::OsRng}, PasswordHash, PasswordVerifier};
 use std::time::Instant;
 
 impl<C, PW> Application<C, PW>
@@ -31,8 +28,28 @@ where
             log::error!("Tokio error {error}");
             DomainError::Hashing("Tokio error".to_string())
         })?;
-        log::info!("Hashing password took {:?}ms", start.elapsed().as_millis());
+        log::info!("Hashing password took {:?}", start.elapsed());
 
         hash
+    }
+
+    pub async fn verify_pw_hash(&self, password: String, hash: String) -> Result<bool, DomainError> {
+        let start = Instant::now();
+        let result = tokio::task::spawn_blocking(move || -> Result<bool, DomainError> {
+            Ok(Argon2::default().verify_password(
+                &password.as_bytes(),
+                &PasswordHash::new(&hash).map_err(|error| {
+                    log::error!("Error creating password hash {error}");
+                    DomainError::Hashing("Error creating password hash".to_string())
+                })?
+            ).is_ok())
+        }).await.map_err(| error | {
+            log::error!("Tokio error {error}");
+            DomainError::Hashing("Error verifying password".to_string())
+        })?;
+
+        log::info!("Verifying password took {:?}", start.elapsed());
+
+        result
     }
 }

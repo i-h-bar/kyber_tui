@@ -25,8 +25,8 @@ where
     };
 
     log::info!(
-        "Handshake finished took {:?}ms",
-        start.elapsed().as_millis()
+        "Handshake finished took {:?}",
+        start.elapsed()
     );
 
     response

@@ -23,8 +23,8 @@ where
         Err(error) => Err(map_domain_error(&error)),
     };
     log::info!(
-        "Authentication request finished. It took {:?}ms",
-        start.elapsed().as_millis()
+        "Authentication request finished. It took {:?}",
+        start.elapsed()
     );
     
     response
