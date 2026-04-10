@@ -1,7 +1,7 @@
 use crate::domain::errors::routes::DomainError;
 use crate::domain::session::Session;
 use contracts::token::PreAuthToken;
-use kyber_crypto::keys::EncryptedMessage;
+use pqcrypto::EncryptedMessage;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn check_pre_auth_token(

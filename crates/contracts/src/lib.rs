@@ -1,7 +1,7 @@
-use kyber_crypto::keys::public::Public;
-use kyber_crypto::keys::traits::TryFromBytes;
-use kyber_crypto::keys::{CryptoError, KeyPair};
-use kyber_crypto::message::EncryptedMessage;
+use pqcrypto::keys::public::Public;
+use pqcrypto::traits::TryFromBytes;
+use pqcrypto::keys::{CryptoError, KeyPair};
+use pqcrypto::EncryptedMessage;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

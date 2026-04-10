@@ -1,5 +1,5 @@
-use kyber_crypto::keys::EncryptedMessage;
-use kyber_crypto::keys::public::Public;
+use pqcrypto::EncryptedMessage;
+use pqcrypto::keys::public::Public;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]

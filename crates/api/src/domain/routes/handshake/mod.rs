@@ -5,7 +5,7 @@ use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::PWStore;
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
 use contracts::token::PreAuthToken;
-use kyber_crypto::keys::pair::KeyPair;
+use pqcrypto::keys::pair::KeyPair;
 use std::ops::Add;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use uuid::Uuid;

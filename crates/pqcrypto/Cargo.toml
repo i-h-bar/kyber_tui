@@ -1,5 +1,5 @@
 [package]
-name = "kyber_crypto"
+name = "pqcrypto"
 version = "0.1.0"
 edition = "2024"
 

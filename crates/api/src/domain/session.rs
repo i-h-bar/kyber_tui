@@ -1,5 +1,5 @@
-use kyber_crypto::keys::KeyPair;
-use kyber_crypto::keys::public::Public;
+use pqcrypto::keys::KeyPair;
+use pqcrypto::keys::public::Public;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 use uuid::Uuid;

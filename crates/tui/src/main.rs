@@ -1,9 +1,9 @@
-use contracts::GenericRequest;
+use contracts::{GenericRequest, GenericResponse};
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
 use contracts::new_user::NewUserRequest;
 use contracts::token::PreAuthToken;
 use dotenv::dotenv;
-use kyber_crypto::keys::pair::KeyPair;
+use pqcrypto::keys::pair::KeyPair;
 use std::env;
 
 #[tokio::main]
@@ -51,5 +51,5 @@ async fn main() {
 
     println!("Response: {:?}", &new_user_response);
 
-    // let new_user_response = new_user_response.json::<GenericResponse>().await.unwrap();
+    let new_user_response = new_user_response.json::<GenericResponse>().await.unwrap();
 }

@@ -1,7 +1,7 @@
 use crate::keys::public::{PUBLIC_KEY_SIZE, Public};
 use crate::keys::secret::{SECRET_KEY_SIZE, Secret};
-use crate::keys::traits::{TryFromBytes, TryToBytes};
-use crate::message::EncryptedMessage;
+use crate::traits::{TryFromBytes, TryToBytes};
+use crate::EncryptedMessage;
 use aes_gcm::aead::rand_core::RngCore;
 use aes_gcm::aead::{Aead, OsRng};
 use aes_gcm::{Aes256Gcm, KeyInit, Nonce};

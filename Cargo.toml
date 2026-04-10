@@ -1,7 +1,8 @@
 [workspace]
 members =[
-    "crates/api", "crates/contracts",
-    "crates/crypto",
+    "crates/api",
+    "crates/contracts",
+    "crates/pqcrypto",
     "crates/tui",
 ]
 resolver = "2"
@@ -11,5 +12,5 @@ pedantic = { level = "warn", priority = -1 }
 missing_errors_doc = "allow"
 
 [workspace.dependencies]
-kyber_crypto = { path="crates/crypto" }
+pqcrypto = { path= "crates/pqcrypto" }
 contracts = { path="crates/contracts" }

@@ -1,5 +1,5 @@
-use kyber_crypto::keys::CryptoError;
-use kyber_crypto::keys::traits::{TryFromBytes, TryToBytes};
+use pqcrypto::keys::CryptoError;
+use pqcrypto::traits::{TryFromBytes, TryToBytes};
 use uuid::Uuid;
 
 pub struct PreAuthToken {

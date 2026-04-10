@@ -1,13 +1,9 @@
-use serde::{Deserializer, Serializer, de, ser};
-use thiserror::Error;
+use serde::{de, ser, Deserializer, Serializer};
 use crate::keys::CryptoError;
-use crate::keys::traits::{TryFromBytes, TryToBytes};
+use crate::traits::{TryFromBytes, TryToBytes};
 
-#[derive(Error, Debug)]
-pub enum EncryptedMessageError {
-    #[error("Deserialisation failed")]
-    DeserialisationError,
-}
+pub mod keys;
+pub mod traits;
 
 pub struct EncryptedMessage {
     pub kem_ciphertext: [u8; 768],
