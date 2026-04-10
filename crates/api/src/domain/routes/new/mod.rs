@@ -3,9 +3,6 @@ use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::{CreateUser, PWStore};
 use contracts::new_user::{NewUserRequest, NewUserResponse};
 use contracts::{GenericRequest, GenericResponse};
-use kyber_crypto::keys::KeyPair;
-use kyber_crypto::keys::public::Public;
-use std::time::Instant;
 use uuid::Uuid;
 
 use crate::domain::errors::routes::DomainError;
@@ -28,25 +25,14 @@ where
 
         let new_user: NewUserRequest = session
             .server_key_pair
-            .decrypt_to_obj(&request.body, &session.client_public_key)
+            .decrypt(&request.body, &session.client_public_key)
             .map_err(|err| {
                 log::warn!("Error decrypting message {}", err);
                 DomainError::DecryptionError("Error decrypting message".to_string())
             })?;
 
         let user_id = Uuid::new_v4();
-
-        let start = Instant::now();
-        let salt = SaltString::generate(&mut OsRng);
-        let argon2 = Argon2::default();
-        let hashed_pw = argon2
-            .hash_password(new_user.password.as_bytes(), &salt)
-            .map_err(|err| {
-                log::warn!("Error hashing password {}", err);
-                DomainError::GenericError("Error hashing password".to_string())
-            })?
-            .to_string();
-        log::info!("Hashing password took {:?}ms", start.elapsed().as_millis());
+        let hashed_pw = self.create_pw_hash(new_user.password.into_bytes()).await?;
 
         let create_user = CreateUser {
             id: user_id,
@@ -68,7 +54,7 @@ where
             session_id: session.id,
             body: session
                 .server_key_pair
-                .encrypt_obj(&response, &session.client_public_key)
+                .encrypt(&response, &session.client_public_key)
                 .map_err(|error| {
                     log::error!("Error encrypting new user body {}", error);
                     DomainError::EncryptionError("Error encrypting new user body".to_string())

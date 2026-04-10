@@ -10,12 +10,12 @@ pub mod token;
 pub struct GenericRequest {
     pub session_id: Uuid,
     pub body: EncryptedMessage,
-    pub token: String,
+    pub token: EncryptedMessage,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct GenericResponse {
     pub session_id: Uuid,
     pub body: EncryptedMessage,
-    pub token: String,
+    pub token: EncryptedMessage,
 }

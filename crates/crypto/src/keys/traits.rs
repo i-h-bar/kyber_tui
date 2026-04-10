@@ -4,8 +4,10 @@ use thiserror::Error;
 #[error("Deserialisation failed")]
 pub struct DeserialisationError;
 
-pub trait B64Serialisation: Sized {
-    fn to_b64(&self) -> String;
+pub trait ToBytes {
+    fn to_bytes(&self) -> Vec<u8>;
+}
 
-    fn from_b64(b64: &str) -> Result<Self, DeserialisationError>;
+pub trait FromBytes: Sized {
+    fn from_bytes(bytes: &[u8]) -> Result<Self, DeserialisationError>;
 }

@@ -4,8 +4,9 @@ use crate::domain::session::Session;
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::PWStore;
 use contracts::token::PreAuthToken;
-use kyber_crypto::keys::KeyPair;
+use kyber_crypto::keys::{EncryptedMessage, KeyPair};
 use std::time::{SystemTime, UNIX_EPOCH};
+use kyber_crypto::keys::traits::FromBytes;
 
 impl<C, PW> Application<C, PW>
 where
@@ -14,12 +15,12 @@ where
 {
     pub fn check_pre_auth_token(
         &self,
-        token: &String,
+        token: &EncryptedMessage,
         session: &Session,
     ) -> Result<PreAuthToken, DomainError> {
-        let token_bytes = session
+        let token: PreAuthToken = session
             .server_key_pair
-            .decrypt_with_secret_from_b64(
+            .decrypt_with_secret(
                 token,
                 &session.token_key,
                 &session.server_key_pair.public,
@@ -28,7 +29,6 @@ where
                 log::info!("Unable to decrypt token: {:?}", error);
                 DomainError::DecryptionError("Invalid Token".to_string())
             })?;
-        let token = PreAuthToken::from_bytes(&token_bytes);
         if token.session_id != session.id {
             log::warn!("Session id mismatch {} - {}", token.session_id, session.id);
             return Err(DomainError::PermissionError(
