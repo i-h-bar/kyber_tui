@@ -8,6 +8,7 @@ use uuid::Uuid;
 pub mod handshake;
 pub mod new_user;
 pub mod token;
+pub mod auth;
 
 #[derive(Serialize, Deserialize)]
 pub struct GenericRequest {

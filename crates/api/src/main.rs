@@ -22,7 +22,8 @@ async fn main() {
         .await
         .add_health_check_route()
         .add_handshake_route()
-        .add_new_user_route();
+        .add_new_user_route()
+        .add_authentication_route();
 
     log::info!("Initialised");
 
