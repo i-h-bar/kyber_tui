@@ -2,33 +2,30 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum DomainError {
-    #[error("Connection error: {0}")]
-    ConnectionError(String),
-
     #[error("Deserialisation error: {0}")]
-    DeserialisationError(String),
+    Deserialisation(String),
 
     #[error("Serialization error: {0}")]
-    SerialisationError(String),
+    Serialisation(String),
 
     #[error("Encryption error: {0}")]
-    EncryptionError(String),
+    Encryption(String),
 
     #[error("Decryption error: {0}")]
-    DecryptionError(String),
+    Decryption(String),
 
     #[error("Error hashing password: {0}")]
-    HashingError(String),
+    Hashing(String),
 
     #[error("Permission error: {0}")]
-    PermissionError(String),
+    Permission(String),
 
     #[error("Session error: {0}")]
-    SessionError(String),
+    Session(String),
 
     #[error("Key error: {0}")]
     KeyError(String),
 
     #[error("{0}")]
-    GenericError(String),
+    Generic(String),
 }

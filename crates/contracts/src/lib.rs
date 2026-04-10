@@ -22,21 +22,20 @@ impl GenericRequest {
         key_pair: &KeyPair,
         public: &Public,
     ) -> Result<T, KeyError> {
-        key_pair.decrypt(&self.body, &public)
+        key_pair.decrypt(&self.body, public)
     }
 
     pub fn get_token<T: TryFromBytes>(
         &self,
         key_pair: &KeyPair,
-        public: Public,
+        public: &Public,
     ) -> Result<T, KeyError> {
-        key_pair.decrypt(&self.token, &public)
+        key_pair.decrypt(&self.token, public)
     }
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct GenericResponse {
-    pub session_id: Uuid,
     pub body: EncryptedMessage,
     pub token: EncryptedMessage,
 }
@@ -47,14 +46,14 @@ impl GenericResponse {
         key_pair: &KeyPair,
         public: &Public,
     ) -> Result<T, KeyError> {
-        key_pair.decrypt(&self.body, &public)
+        key_pair.decrypt(&self.body, public)
     }
 
     pub fn get_token<T: TryFromBytes>(
         &self,
         key_pair: &KeyPair,
-        public: Public,
+        public: &Public,
     ) -> Result<T, KeyError> {
-        key_pair.decrypt(&self.token, &public)
+        key_pair.decrypt(&self.token, public)
     }
 }

@@ -20,16 +20,16 @@ where
             let argon2 = Argon2::default();
             Ok(argon2
                 .hash_password(&password_bytes, &salt)
-                .map_err(|err| {
-                    log::warn!("Error hashing password {}", err);
-                    DomainError::GenericError("Error hashing password".to_string())
+                .map_err(|error| {
+                    log::warn!("Error hashing password {error}");
+                    DomainError::Hashing("Error hashing password".to_string())
                 })?
                 .to_string())
         })
         .await
         .map_err(|error| {
-            log::error!("Tokio error {}", error);
-            DomainError::GenericError("Tokio error".to_string())
+            log::error!("Tokio error {error}");
+            DomainError::Hashing("Tokio error".to_string())
         })?;
         log::info!("Hashing password took {:?}ms", start.elapsed().as_millis());
 

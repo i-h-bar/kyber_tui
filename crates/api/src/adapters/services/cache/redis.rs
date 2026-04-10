@@ -3,8 +3,7 @@ use crate::domain::session::Session;
 use crate::ports::services::cache::Cache;
 use async_trait::async_trait;
 use redis::aio::MultiplexedConnection;
-use redis::{AsyncCommands, Client, RedisError, SetExpiry, SetOptions};
-use sqlx::postgres::PgTypeKind::Domain;
+use redis::{AsyncCommands, Client, SetExpiry, SetOptions};
 use std::env;
 use uuid::Uuid;
 
@@ -27,11 +26,10 @@ impl Cache for RedisCache {
     }
     async fn save_session(&self, session: &Session) -> Result<(), DomainError> {
         let session_str = serde_json::to_string(&session).map_err(|error| {
-            log::warn!("Session serialisation error: {}", error);
-            DomainError::SerialisationError("Failed to serialise session".to_string())
+            log::warn!("Session serialisation error: {error}");
+            DomainError::Serialisation("Failed to serialise session".to_string())
         })?;
         self.get_connection()
-            .await
             .set_options::<String, String, ()>(
                 session.id.to_string(),
                 session_str,
@@ -39,8 +37,8 @@ impl Cache for RedisCache {
             )
             .await
             .map_err(|error| {
-                log::warn!("Session save error: {}", error);
-                DomainError::SessionError("Failed to save session".to_string())
+                log::warn!("Session save error: {error}");
+                DomainError::Session("Failed to save session".to_string())
             })?;
 
         Ok(())
@@ -50,23 +48,22 @@ impl Cache for RedisCache {
         Ok(serde_json::from_str(
             &self
                 .get_connection()
-                .await
                 .get::<String, String>((*session_id).into())
                 .await
                 .map_err(|error| {
-                    log::warn!("Session load error: {}", error);
-                    DomainError::PermissionError("Failed to load session".to_string())
+                    log::warn!("Session load error: {error}");
+                    DomainError::Permission("Failed to load session".to_string())
                 })?,
         )
         .map_err(|error| {
-            log::warn!("Session load deserialisation error: {}", error);
-            DomainError::DeserialisationError("Failed to deserialise session".to_string())
+            log::warn!("Session load deserialisation error: {error}");
+            DomainError::Deserialisation("Failed to deserialise session".to_string())
         })?)
     }
 }
 
 impl RedisCache {
-    async fn get_connection(&self) -> MultiplexedConnection {
+    fn get_connection(&self) -> MultiplexedConnection {
         self.connection.clone()
     }
 }

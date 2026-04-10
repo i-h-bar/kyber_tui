@@ -21,7 +21,7 @@ where
     ) -> Result<HandshakeResponse, DomainError> {
         let client_public_key = payload.pub_key;
         let server_key_pair = KeyPair::generate().map_err(|error| {
-            log::error!("Failed to generate key pair {}", error);
+            log::error!("Failed to generate key pair {error}");
             DomainError::KeyError("Failed to generate key pair".to_string())
         })?;
 
@@ -33,8 +33,8 @@ where
             expiry_s: session_expiry
                 .duration_since(UNIX_EPOCH)
                 .map_err(|error| {
-                    log::error!("Failed to get session expiry time {}", error);
-                    DomainError::GenericError("Failed to get session expiry time".to_string())
+                    log::error!("Failed to get session expiry time {error}");
+                    DomainError::Generic("Failed to get session expiry time".to_string())
                 })?
                 .as_secs(),
         };
@@ -42,8 +42,8 @@ where
         let (encrypted_token, shared_secret) = server_key_pair
             .encrypt_with_secret(&token, &client_public_key)
             .map_err(|error| {
-                log::error!("Failed to encrypt token {}", error);
-                DomainError::EncryptionError("Failed to encrypt token".to_string())
+                log::error!("Failed to encrypt token {error}");
+                DomainError::Encryption("Failed to encrypt token".to_string())
             })?;
 
         let session = Session {

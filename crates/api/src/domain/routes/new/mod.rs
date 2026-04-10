@@ -1,15 +1,10 @@
-use crate::domain::Application;
+use crate::domain::{Application, auth};
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::{CreateUser, PWStore};
 use contracts::new_user::{NewUserRequest, NewUserResponse};
 use contracts::{GenericRequest, GenericResponse};
 use uuid::Uuid;
-
 use crate::domain::errors::routes::DomainError;
-use argon2::{
-    Argon2,
-    password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
-};
 
 impl<C, PW> Application<C, PW>
 where
@@ -21,13 +16,13 @@ where
         request: GenericRequest,
     ) -> Result<GenericResponse, DomainError> {
         let session = self.cache.load_session(&request.session_id).await?;
-        self.check_pre_auth_token(&request.token, &session)?;
+        auth::token::check_pre_auth_token(&request.token, &session)?;
 
         let new_user: NewUserRequest = request
             .get_message(&session.server_key_pair, &session.client_public_key)
-            .map_err(|err| {
-                log::warn!("Error decrypting message {}", err);
-                DomainError::DecryptionError("Error decrypting message".to_string())
+            .map_err(|error| {
+                log::warn!("Error decrypting message {error}");
+                DomainError::Decryption("Error decrypting message".to_string())
             })?;
 
         let user_id = Uuid::new_v4();
@@ -43,20 +38,19 @@ where
             .create_user(create_user)
             .await
             .map_err(|error| {
-                log::warn!("User creation failed: {:?}", error);
-                DomainError::GenericError("User creation failed".to_string())
+                log::warn!("User creation failed: {error:?}");
+                DomainError::Generic("User creation failed".to_string())
             })?;
 
         let response = NewUserResponse { success: true };
 
         Ok(GenericResponse {
-            session_id: session.id,
             body: session
                 .server_key_pair
                 .encrypt(&response, &session.client_public_key)
                 .map_err(|error| {
-                    log::error!("Error encrypting new user body {}", error);
-                    DomainError::EncryptionError("Error encrypting new user body".to_string())
+                    log::error!("Error encrypting new user body {error:?}");
+                    DomainError::Encryption("Error encrypting new user body".to_string())
                 })?,
             token: request.token,
         })

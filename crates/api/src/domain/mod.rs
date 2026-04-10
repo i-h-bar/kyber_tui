@@ -1,6 +1,5 @@
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::PWStore;
-use std::env;
 
 pub mod auth;
 pub mod errors;

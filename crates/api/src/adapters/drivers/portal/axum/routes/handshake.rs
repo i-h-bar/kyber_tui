@@ -19,9 +19,9 @@ where
     log::info!("Handshake request");
     let start = Instant::now();
 
-    let response = match app.handshake(payload).await {
+    let response = match Box::pin(app.handshake(payload)).await {
         Ok(result) => Ok(Json(result)),
-        Err(error) => Err(map_domain_error(error)),
+        Err(error) => Err(map_domain_error(&error)),
     };
 
     log::info!(

@@ -20,7 +20,7 @@ where
     let start = Instant::now();
     let response = match app.create_user(payload).await {
         Ok(result) => Ok(Json(result)),
-        Err(error) => Err(map_domain_error(error)),
+        Err(error) => Err(map_domain_error(&error)),
     };
     log::info!(
         "New user request finished took {:?}ms",
