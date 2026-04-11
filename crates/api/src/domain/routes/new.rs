@@ -15,8 +15,7 @@ where
         &self,
         request: GenericRequest,
     ) -> Result<GenericResponse, DomainError> {
-        let session = self.cache.load_session(&request.session_id).await?;
-        auth::token::check_pre_auth_token(&request.token, &session)?;
+        let (session, _) = self.verify_pre_auth_session_token(&request).await?;
 
         let new_user: NewUserRequest = request
             .get_message(&session.server_key_pair, &session.client_public_key)
