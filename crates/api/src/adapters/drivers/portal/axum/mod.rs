@@ -42,7 +42,7 @@ where
             router: Router::new(),
             listener: TcpListener::bind(bind_addr.unwrap_or("0.0.0.0:3000"))
                 .await
-                .unwrap(),
+                .expect("Unable to bind axum server"),
         }
     }
 
@@ -95,6 +95,6 @@ where
     }
 
     async fn run(self) {
-        axum::serve(self.listener, self.router).await.unwrap();
+        axum::serve(self.listener, self.router).await.expect("Axum server error");
     }
 }
