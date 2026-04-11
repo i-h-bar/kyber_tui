@@ -20,7 +20,14 @@ pub fn check_pre_auth_token(
         return Err(DomainError::Permission("Session id mismatch".to_string()));
     }
 
-    let session_expiry = session.expiry.duration_since(UNIX_EPOCH).unwrap().as_secs();
+    let session_expiry = session
+        .expiry
+        .duration_since(UNIX_EPOCH)
+        .map_err(|error| {
+            log::error!("Session expiry time before UNIX_EPOCH - {error:?}");
+            DomainError::Permission("Session expiry time before UNIX_EPOCH".to_string())
+        })?
+        .as_secs();
     if token.expiry_s != session_expiry {
         log::warn!("Mismatched expiry {} - {}", token.expiry_s, session_expiry);
         return Err(DomainError::Permission("Mismatch Expiry".to_string()));
