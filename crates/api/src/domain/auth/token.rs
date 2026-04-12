@@ -1,6 +1,6 @@
+use crate::domain::Application;
 use crate::domain::errors::routes::DomainError;
 use crate::domain::session::Session;
-use crate::domain::Application;
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::PWStore;
 use contracts::GenericRequest;

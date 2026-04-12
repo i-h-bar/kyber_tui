@@ -5,6 +5,7 @@ use serde::{Deserializer, Serializer, de, ser};
 pub mod keys;
 pub mod traits;
 
+#[derive(Clone)]
 pub struct EncryptedMessage {
     pub kem_ciphertext: [u8; 768],
     pub nonce: [u8; 12],

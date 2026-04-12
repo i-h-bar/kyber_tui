@@ -2636,9 +2636,12 @@ version = "0.1.0"
 dependencies = [
  "contracts",
  "dotenv",
+ "log",
  "pqcrypto",
  "reqwest",
+ "thiserror 2.0.18",
  "tokio",
+ "uuid",
 ]
 
 [[package]]

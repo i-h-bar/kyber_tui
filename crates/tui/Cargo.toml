@@ -12,3 +12,6 @@ tokio = { version = "1", features = ["full"] }
 pqcrypto = { workspace = true }
 contracts = { workspace = true }
 dotenv = "0.15.0"
+uuid = "1.23.0"
+thiserror = "2.0.18"
+log = "0.4.29"
