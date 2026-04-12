@@ -3,7 +3,7 @@ use sqlx::postgres::PgRow;
 use sqlx::{Error, FromRow, Row};
 
 pub const GET_AUTH_CREDENTIALS: &str =
-    "SELECT id, username, pw_hash FROM authentication where username = $1;";
+    "SELECT id, username, pw_hash FROM users where username = $1;";
 
 impl FromRow<'_, PgRow> for AuthCredentials {
     fn from_row(row: &'_ PgRow) -> Result<Self, Error> {
