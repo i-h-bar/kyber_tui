@@ -1,11 +1,6 @@
 pub mod api;
 
-use contracts::GenericRequest;
-use contracts::auth::AuthRequest;
-use contracts::handshake::{HandshakeRequest, HandshakeResponse};
-use contracts::token::PreAuthToken;
 use dotenv::dotenv;
-use pqcrypto::keys::pair::KeyPair;
 use std::env;
 use crate::api::ApiSession;
 
