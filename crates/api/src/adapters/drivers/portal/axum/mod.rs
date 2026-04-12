@@ -95,6 +95,8 @@ where
     }
 
     async fn run(self) {
-        axum::serve(self.listener, self.router).await.expect("Axum server error");
+        axum::serve(self.listener, self.router)
+            .await
+            .expect("Axum server error");
     }
 }

@@ -1,5 +1,5 @@
 use crate::domain::errors::routes::DomainError;
-use crate::domain::{Application, auth};
+use crate::domain::Application;
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::{CreateUser, PWStore};
 use contracts::new_user::{NewUserRequest, NewUserResponse};

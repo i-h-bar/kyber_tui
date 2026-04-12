@@ -1,22 +1,25 @@
 use crate::domain::errors::routes::DomainError;
 use crate::domain::session::Session;
+use crate::domain::Application;
+use crate::ports::services::cache::Cache;
+use crate::ports::services::pw_store::PWStore;
+use contracts::GenericRequest;
 use contracts::token::PreAuthToken;
 use pqcrypto::EncryptedMessage;
 use std::time::{SystemTime, UNIX_EPOCH};
-use contracts::GenericRequest;
-use crate::domain::{auth, Application};
-use crate::ports::services::cache::Cache;
-use crate::ports::services::pw_store::PWStore;
 
 impl<C, PW> Application<C, PW>
 where
     C: Cache + Send + Sync,
     PW: PWStore + Send + Sync,
 {
-    pub async fn verify_pre_auth_session_token(&self, request: &GenericRequest) -> Result<(Session, PreAuthToken), DomainError> {
+    pub async fn verify_pre_auth_session_token(
+        &self,
+        request: &GenericRequest,
+    ) -> Result<(Session, PreAuthToken), DomainError> {
         let session = self.cache.load_session(&request.session_id).await?;
         let token = check_pre_auth_token(&request.token, &session)?;
-        
+
         Ok((session, token))
     }
 }
