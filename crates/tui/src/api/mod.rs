@@ -1,5 +1,5 @@
-pub mod new;
 mod auth;
+pub mod new;
 
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
 use contracts::token::{AuthToken, PreAuthToken};
@@ -14,6 +14,9 @@ use uuid::Uuid;
 pub enum ApiError {
     #[error("Handshake Error")]
     Handshake,
+
+    #[error("Error authenticating")]
+    Authenticate,
 }
 
 pub struct ApiSession {
@@ -64,5 +67,19 @@ impl ApiSession {
             auth_token: None,
             client,
         })
+    }
+
+    pub async fn authed(username: String, password: String) -> Result<Self, ApiError> {
+        let mut session = ApiSession::handshake().await?;
+        if session.authenticate(username, password).await? {
+            Ok(session)
+        } else {
+            Err(ApiError::Authenticate)
+        }
+    }
+
+    #[must_use]
+    pub(crate) fn id(&self) -> &Uuid {
+        &self.session_id
     }
 }
