@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS credentials (
     id UUID UNIQUE DEFAULT gen_random_uuid() PRIMARY KEY,
-    username BYTEA NOT NULL,
+    service BYTEA NOT NULL,
+    username BYTEA,
     password BYTEA NOT NULL,
     user_id UUID NOT NULL REFERENCES users(id),
     version INT DEFAULT 1
