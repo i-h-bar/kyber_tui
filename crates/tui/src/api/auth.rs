@@ -2,6 +2,8 @@ use crate::api::{ApiError, ApiSession};
 use contracts::auth::{AuthRequest, AuthResponse};
 use contracts::token::AuthToken;
 use contracts::{GenericRequest, GenericResponse};
+use crate::utils::hashing;
+use crate::utils::hashing::hash;
 
 impl ApiSession {
     pub async fn authenticate(
@@ -62,6 +64,12 @@ impl ApiSession {
 
         self.auth_token = Some(auth_token);
         self.encrypted_auth_token = Some(response.token);
+        
+        let hash = match hashing::hash(&auth_request.password) {
+            Some(hash) => hash,
+            None => return Err(ApiError::Authenticate),
+        };
+        self.secret = Some(hash);
 
         Ok(auth_response.success)
     }

@@ -21,8 +21,8 @@ where
         user_id: &Uuid,
         credential_id: &Uuid,
     ) -> Result<[u8; 32], DomainError> {
-        let mut hash = HmacSha256::new_from_slice(&self.root_secret).map_err(|err| {
-            log::error!("Error creating HMAC_SHA256 from slice: {:?}", err);
+        let mut hash = HmacSha256::new_from_slice(&self.root_secret).map_err(|error| {
+            log::error!("Error creating HMAC_SHA256 from slice: {error:?}");
             DomainError::Hashing("Failed to construct HMAC_SHA256 from slice".into())
         })?;
 

@@ -1,5 +1,6 @@
 mod auth;
 pub mod new;
+pub mod add;
 
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
 use contracts::token::{AuthToken, PreAuthToken};
@@ -28,6 +29,7 @@ pub struct ApiSession {
     encrypted_auth_token: Option<EncryptedMessage>,
     auth_token: Option<AuthToken>,
     client: Client,
+    secret: Option<[u8; 32]>,
 }
 
 impl ApiSession {
@@ -66,6 +68,7 @@ impl ApiSession {
             encrypted_auth_token: None,
             auth_token: None,
             client,
+            secret: None,
         })
     }
 

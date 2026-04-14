@@ -64,11 +64,11 @@ impl PWStore for Postgres {
 
     async fn upsert_credential(&self, credential: &Credential) -> Result<(), DomainError> {
         sqlx::query(UPSERT_CREDENTIAL)
-            .bind(&credential.id)
+            .bind(credential.id)
             .bind(&credential.service)
             .bind(&credential.username)
             .bind(&credential.password)
-            .bind(&credential.user_id)
+            .bind(credential.user_id)
             .execute(&self.pool)
             .await
             .map_err(|error| {
@@ -80,7 +80,7 @@ impl PWStore for Postgres {
             future::try_join_all(notes.iter().map(|note| {
                 sqlx::query(UPSERT_NOTE)
                     .bind(note.id)
-                    .bind(&credential.id)
+                    .bind(credential.id)
                     .bind(&note.content)
                     .execute(&self.pool)
             }))
