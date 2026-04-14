@@ -5,8 +5,8 @@ pub mod add;
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
 use contracts::token::{AuthToken, PreAuthToken};
 use pqcrypto::EncryptedMessage;
-use pqcrypto::keys::KeyPair;
-use pqcrypto::keys::public::Public;
+use pqcrypto::asym::KeyPair;
+use pqcrypto::asym::public::Public;
 use reqwest::Client;
 use thiserror::Error;
 use uuid::Uuid;
@@ -18,6 +18,9 @@ pub enum ApiError {
 
     #[error("Error authenticating")]
     Authenticate,
+
+    #[error("Error encrypting message")]
+    Encryption
 }
 
 pub struct ApiSession {

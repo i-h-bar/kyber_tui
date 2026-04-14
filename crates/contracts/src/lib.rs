@@ -1,6 +1,6 @@
 use pqcrypto::EncryptedMessage;
-use pqcrypto::keys::public::Public;
-use pqcrypto::keys::{CryptoError, KeyPair};
+use pqcrypto::asym::public::Public;
+use pqcrypto::asym::{CryptoError, KeyPair};
 use pqcrypto::traits::TryFromBytes;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

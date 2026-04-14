@@ -1,5 +1,5 @@
-use pqcrypto::keys::KeyPair;
-use pqcrypto::keys::public::Public;
+use pqcrypto::asym::KeyPair;
+use pqcrypto::asym::public::Public;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 use uuid::Uuid;

@@ -1,4 +1,4 @@
-use crate::keys::CryptoError;
+use crate::asym::CryptoError;
 
 pub trait TryToBytes {
     fn to_bytes(&self) -> Result<Vec<u8>, CryptoError>;

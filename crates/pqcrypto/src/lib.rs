@@ -1,9 +1,10 @@
-use crate::keys::CryptoError;
+use crate::asym::CryptoError;
 use crate::traits::{TryFromBytes, TryToBytes};
 use serde::{Deserializer, Serializer, de, ser};
 
-pub mod keys;
+pub mod asym;
 pub mod traits;
+pub mod sym;
 
 #[derive(Clone)]
 pub struct EncryptedMessage {

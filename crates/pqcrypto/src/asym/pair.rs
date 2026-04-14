@@ -1,6 +1,6 @@
 use crate::EncryptedMessage;
-use crate::keys::public::{PUBLIC_KEY_SIZE, Public};
-use crate::keys::secret::{SECRET_KEY_SIZE, Secret};
+use crate::asym::public::{PUBLIC_KEY_SIZE, Public};
+use crate::asym::secret::{SECRET_KEY_SIZE, Secret};
 use crate::traits::{TryFromBytes, TryToBytes};
 use aes_gcm::aead::rand_core::RngCore;
 use aes_gcm::aead::{Aead, OsRng};

@@ -24,6 +24,7 @@ pub struct Credential {
     pub service: Vec<u8>,
     pub username: Vec<u8>,
     pub password: Vec<u8>,
+    pub service_index: [u8; 32],
     pub user_id: Uuid,
     pub notes: Option<Vec<Note>>,
 }

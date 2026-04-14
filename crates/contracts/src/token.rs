@@ -1,4 +1,4 @@
-use pqcrypto::keys::CryptoError;
+use pqcrypto::asym::CryptoError;
 use pqcrypto::traits::{TryFromBytes, TryToBytes};
 use uuid::Uuid;
 

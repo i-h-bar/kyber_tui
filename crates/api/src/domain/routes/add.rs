@@ -1,5 +1,5 @@
+use pqcrypto::sym::Symmetric;
 use crate::domain::Application;
-use crate::domain::encryption::encrypt_field;
 use crate::domain::errors::routes::DomainError;
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::{Credential, Note, PWStore};
@@ -7,6 +7,7 @@ use aes_gcm::{Aes256Gcm, KeyInit};
 use contracts::new_credential::{NewCredentialRequest, NewCredentialResponse};
 use contracts::{GenericRequest, GenericResponse};
 use uuid::Uuid;
+use pqcrypto::sym::aes::AesCipher;
 
 impl<C, PW> Application<C, PW>
 where
@@ -28,18 +29,29 @@ where
 
         let credential_id = Uuid::new_v4();
         let secret = self.construct_secret(&token.user_id, &credential_id)?;
-        let aes = Aes256Gcm::new_from_slice(&secret).unwrap();
-        let service = encrypt_field(&aes, &new_credential.service)?;
-        let username = encrypt_field(&aes, &new_credential.username)?;
-        let password = encrypt_field(&aes, &new_credential.password)?;
+        let cipher = AesCipher::new(&secret);
+        let service = cipher.encrypt(&new_credential.service).map_err(| error | {
+            log::info!("Failed to encrypt service new user credential: {error:?}");
+            DomainError::Encryption("Failed to encrypt new user credential".into())
+        })?;
+        let username = cipher.encrypt(&new_credential.username).map_err(| error | {
+            log::info!("Failed to encrypt username new user credential: {error:?}");
+            DomainError::Encryption("Failed to encrypt new user credential".into())
+        })?;
+        let password = cipher.encrypt(&new_credential.password).map_err(| error | {
+            log::info!("Failed to encrypt new password user credential: {error:?}");
+            DomainError::Encryption("Failed to encrypt new user credential".into())
+        })?;
 
         let notes: Option<Vec<Note>> = new_credential.notes.map(|notes| {
             notes
                 .iter()
                 .filter_map(|note| {
+                    let content = cipher.encrypt(note).ok()?;
+
                     Some(Note {
                         id: Uuid::new_v4(),
-                        content: encrypt_field(&aes, note).ok()?,
+                        content,
                     })
                 })
                 .collect()
@@ -57,7 +69,6 @@ where
         self.pw_store.upsert_credential(&payload).await?;
 
         let response = NewCredentialResponse { added: 1 };
-
         let response = GenericResponse {
             body: session
                 .server_key_pair

@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS credentials (
     username BYTEA,
     password BYTEA NOT NULL,
     user_id UUID NOT NULL REFERENCES users(id),
+    service_index BYTEA NOT NULL,
     version INT DEFAULT 1
 );
 

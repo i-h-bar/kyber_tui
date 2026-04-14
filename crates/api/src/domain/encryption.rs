@@ -33,26 +33,3 @@ where
     }
 }
 
-pub fn encrypt_field(cipher: &Aes256Gcm, plaintext: &[u8]) -> Result<Vec<u8>, DomainError> {
-    let mut nonce_bytes = [0u8; 12];
-    OsRng.fill_bytes(&mut nonce_bytes);
-    let nonce = Nonce::from_slice(&nonce_bytes);
-
-    let ciphertext = cipher
-        .encrypt(nonce, plaintext)
-        .map_err(|_| DomainError::Encryption("AES-GCM encrypt failed".into()))?;
-
-    // Prepend nonce so we can recover it on decryption
-    let mut stored = nonce_bytes.to_vec();
-    stored.extend_from_slice(&ciphertext);
-    Ok(stored)
-}
-
-pub fn decrypt_field(cipher: &Aes256Gcm, stored: &[u8]) -> Result<Vec<u8>, DomainError> {
-    let (nonce_bytes, ciphertext) = stored.split_at(12);
-    let nonce = Nonce::from_slice(nonce_bytes);
-
-    cipher
-        .decrypt(nonce, ciphertext)
-        .map_err(|_| DomainError::Decryption("AES-GCM decrypt failed".into()))
-}

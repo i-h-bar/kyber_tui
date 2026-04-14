@@ -1,5 +1,5 @@
 use pqcrypto::EncryptedMessage;
-use pqcrypto::keys::public::Public;
+use pqcrypto::asym::public::Public;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
