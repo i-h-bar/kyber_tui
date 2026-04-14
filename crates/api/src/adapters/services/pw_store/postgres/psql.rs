@@ -1,8 +1,11 @@
 use crate::adapters::services::pw_store::postgres::queries::auth::GET_AUTH_CREDENTIALS;
 use crate::adapters::services::pw_store::postgres::queries::create_user::CREATE_USER;
+use crate::adapters::services::pw_store::postgres::queries::credentials::UPSERT_CREDENTIAL;
+use crate::adapters::services::pw_store::postgres::queries::notes::UPSERT_NOTE;
 use crate::domain::errors::routes::DomainError;
-use crate::ports::services::pw_store::{AuthCredentials, CreateUser, PWStore};
+use crate::ports::services::pw_store::{AuthCredentials, CreateUser, Credential, PWStore};
 use async_trait::async_trait;
+use futures::future;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Row};
 use std::env;
@@ -57,5 +60,37 @@ impl PWStore for Postgres {
 
         log::info!("Fetching auth credentials took {:?}", start.elapsed());
         result
+    }
+
+    async fn upsert_credential(&self, credential: &Credential) -> Result<(), DomainError> {
+        sqlx::query(UPSERT_CREDENTIAL)
+            .bind(&credential.id)
+            .bind(&credential.service)
+            .bind(&credential.username)
+            .bind(&credential.password)
+            .bind(&credential.user_id)
+            .execute(&self.pool)
+            .await
+            .map_err(|error| {
+                log::warn!("Failed to upsert credential {error:?}");
+                DomainError::Generic("Unable to upsert credential".to_string())
+            })?;
+
+        if let Some(notes) = credential.notes.as_ref() {
+            future::try_join_all(notes.iter().map(|note| {
+                sqlx::query(UPSERT_NOTE)
+                    .bind(note.id)
+                    .bind(&credential.id)
+                    .bind(&note.content)
+                    .execute(&self.pool)
+            }))
+            .await
+            .map_err(|error| {
+                log::warn!("Failed to upsert credential notes {error:?}");
+                DomainError::Generic("Unable to upsert credential notes".to_string())
+            })?;
+        }
+
+        Ok(())
     }
 }

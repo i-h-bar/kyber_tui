@@ -22,10 +22,7 @@ where
         Ok(result) => Ok(Json(result)),
         Err(error) => Err(map_domain_error(&error)),
     };
-    log::info!(
-        "Add credential finished. It took {:?}",
-        start.elapsed()
-    );
+    log::info!("Add credential finished. It took {:?}", start.elapsed());
 
     response
 }

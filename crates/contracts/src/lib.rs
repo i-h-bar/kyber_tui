@@ -7,6 +7,7 @@ use uuid::Uuid;
 
 pub mod auth;
 pub mod handshake;
+pub mod new_credential;
 pub mod new_user;
 pub mod token;
 

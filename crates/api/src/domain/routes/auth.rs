@@ -48,15 +48,16 @@ where
                 DomainError::Encryption("Error encrypting message".to_string())
             })?;
 
-        let token = session
+        let (token, secret) = session
             .server_key_pair
-            .encrypt(&token, &session.client_public_key)
+            .encrypt_with_secret(&token, &session.client_public_key)
             .map_err(|error| {
                 log::warn!("Error encrypting message {error}");
                 DomainError::Encryption("Error encrypting message".to_string())
             })?;
 
         session.user_id = Some(auth_credentials.id);
+        session.token_key = secret;
         self.cache.save_session(&session).await?;
 
         Ok(GenericResponse { body, token })

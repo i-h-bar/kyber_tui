@@ -1,4 +1,4 @@
 pub mod auth;
 pub mod create_user;
-mod credentials;
-mod notes;
+pub mod credentials;
+pub mod notes;
