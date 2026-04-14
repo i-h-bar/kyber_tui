@@ -16,7 +16,7 @@ where
     C: Cache + Send + Sync,
     PW: PWStore + Send + Sync,
 {
-    log::info!("Handshake request");
+    log::info!("Handshake request received");
     let start = Instant::now();
 
     let response = match Box::pin(app.handshake(payload)).await {

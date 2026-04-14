@@ -16,14 +16,14 @@ where
     C: Cache + Send + Sync,
     PW: PWStore + Send + Sync,
 {
-    log::info!("Authentication request received");
+    log::info!("Add credential request received");
     let start = Instant::now();
-    let response = match app.authenticate(payload).await {
+    let response = match app.add_credential(payload).await {
         Ok(result) => Ok(Json(result)),
         Err(error) => Err(map_domain_error(&error)),
     };
     log::info!(
-        "Authentication request finished. It took {:?}",
+        "Add credential finished. It took {:?}",
         start.elapsed()
     );
 

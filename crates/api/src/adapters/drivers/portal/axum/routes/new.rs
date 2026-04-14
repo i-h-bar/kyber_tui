@@ -16,7 +16,7 @@ where
     C: Cache + Send + Sync,
     PW: PWStore + Send + Sync,
 {
-    log::info!("New user request");
+    log::info!("New user request received");
     let start = Instant::now();
     let response = match app.create_user(payload).await {
         Ok(result) => Ok(Json(result)),

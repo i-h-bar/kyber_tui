@@ -18,12 +18,15 @@ async fn main() {
     let pw_store = create_pw_store().await;
     let application = Application::new(cache, pw_store);
 
-    let portal = create_portal(application, Some("0.0.0.0:3000"))
+    let url = std::env::var("URL").ok();
+
+    let portal = create_portal(application, url.as_deref())
         .await
         .add_health_check_route()
         .add_handshake_route()
         .add_new_user_route()
-        .add_authentication_route();
+        .add_authentication_route()
+        .add_new_credential_route();
 
     log::info!("Initialised");
 

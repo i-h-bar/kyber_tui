@@ -1,4 +1,4 @@
-use crate::adapters::drivers::portal::axum::routes::{authentication, handshake, new};
+use crate::adapters::drivers::portal::axum::routes::{add, authentication, handshake, new};
 use crate::domain::Application;
 use crate::ports::drivers::portal::Portal;
 use crate::ports::services::cache::Cache;
@@ -88,6 +88,18 @@ where
             post({
                 let app = Arc::clone(&self.application);
                 move |payload| authentication::run(app, payload)
+            }),
+        );
+
+        self
+    }
+
+    fn add_new_credential_route(mut self) -> Self {
+        self.router = self.router.route(
+            "/add",
+            post({
+                let app = Arc::clone(&self.application);
+                move |payload| add::run(app, payload)
             }),
         );
 
