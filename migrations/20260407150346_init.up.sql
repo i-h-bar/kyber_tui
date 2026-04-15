@@ -21,3 +21,5 @@ CREATE TABLE IF NOT EXISTS notes (
     credential_id UUID NOT NULL REFERENCES credentials(id),
     content BYTEA NOT NULL
 );
+
+CREATE INDEX IF NOT EXISTS ix_creds_service_index ON credentials (service_index);

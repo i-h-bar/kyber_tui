@@ -52,6 +52,7 @@ impl ApiSession {
             username,
             password,
             notes,
+            service_name: credential.service,
         };
 
         let request = GenericRequest {

@@ -8,6 +8,7 @@ pub struct NewCredentialRequest {
     pub username: Vec<u8>,
     pub password: Vec<u8>,
     pub notes: Option<Vec<Vec<u8>>>,
+    pub service_name: String,
 }
 
 #[derive(Serialize, Deserialize)]

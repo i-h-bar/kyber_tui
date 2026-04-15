@@ -68,6 +68,7 @@ impl PWStore for Postgres {
             .bind(&credential.service)
             .bind(&credential.username)
             .bind(&credential.password)
+            .bind(&credential.service_index)
             .bind(credential.user_id)
             .execute(&self.pool)
             .await

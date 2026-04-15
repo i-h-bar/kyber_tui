@@ -42,6 +42,9 @@ where
             log::info!("Failed to encrypt new password user credential: {error:?}");
             DomainError::Encryption("Failed to encrypt new user credential".into())
         })?;
+        let service_index = self.construct_hash(
+            &token.user_id, &credential_id, &new_credential.service_name
+        )?;
 
         let notes: Option<Vec<Note>> = new_credential.notes.map(|notes| {
             notes
@@ -63,6 +66,7 @@ where
             service,
             username,
             password,
+            service_index,
             notes,
         };
 
