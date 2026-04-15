@@ -1,13 +1,12 @@
-use pqcrypto::sym::Symmetric;
 use crate::domain::Application;
 use crate::domain::errors::routes::DomainError;
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::{Credential, Note, PWStore};
-use aes_gcm::{Aes256Gcm, KeyInit};
 use contracts::new_credential::{NewCredentialRequest, NewCredentialResponse};
 use contracts::{GenericRequest, GenericResponse};
-use uuid::Uuid;
+use pqcrypto::sym::Symmetric;
 use pqcrypto::sym::aes::AesCipher;
+use uuid::Uuid;
 
 impl<C, PW> Application<C, PW>
 where
@@ -30,21 +29,20 @@ where
         let credential_id = Uuid::new_v4();
         let secret = self.construct_secret(&token.user_id, &credential_id)?;
         let cipher = AesCipher::new(&secret);
-        let service = cipher.encrypt(&new_credential.service).map_err(| error | {
+        let service = cipher.encrypt(&new_credential.service).map_err(|error| {
             log::info!("Failed to encrypt service new user credential: {error:?}");
             DomainError::Encryption("Failed to encrypt new user credential".into())
         })?;
-        let username = cipher.encrypt(&new_credential.username).map_err(| error | {
+        let username = cipher.encrypt(&new_credential.username).map_err(|error| {
             log::info!("Failed to encrypt username new user credential: {error:?}");
             DomainError::Encryption("Failed to encrypt new user credential".into())
         })?;
-        let password = cipher.encrypt(&new_credential.password).map_err(| error | {
+        let password = cipher.encrypt(&new_credential.password).map_err(|error| {
             log::info!("Failed to encrypt new password user credential: {error:?}");
             DomainError::Encryption("Failed to encrypt new user credential".into())
         })?;
-        let service_index = self.construct_hash(
-            &token.user_id, &credential_id, &new_credential.service_name
-        )?;
+        let service_index =
+            self.construct_hash(&token.user_id, &new_credential.service_name)?;
 
         let notes: Option<Vec<Note>> = new_credential.notes.map(|notes| {
             notes
@@ -77,7 +75,10 @@ where
             body: session
                 .server_key_pair
                 .encrypt(&response, &session.client_public_key)
-                .unwrap(),
+                .map_err(|error| {
+                    log::warn!("Error encrypting new credential response {error:?}");
+                    DomainError::Encryption("Failed to encrypt new credential".into())
+                })?,
             token: request.token,
         };
 

@@ -10,7 +10,6 @@ pub struct CreateUser {
 
 pub struct AuthCredentials {
     pub id: Uuid,
-    pub username: String,
     pub pw_hash: String,
 }
 

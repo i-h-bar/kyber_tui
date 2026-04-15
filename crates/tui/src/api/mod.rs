@@ -1,13 +1,14 @@
+pub mod add;
 mod auth;
 pub mod new;
-pub mod add;
 
+use crate::adapters::services::request::Client;
+use crate::ports::services::request::RequestClient;
 use contracts::handshake::{HandshakeRequest, HandshakeResponse};
 use contracts::token::{AuthToken, PreAuthToken};
 use pqcrypto::EncryptedMessage;
 use pqcrypto::asym::KeyPair;
 use pqcrypto::asym::public::Public;
-use reqwest::Client;
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -20,7 +21,19 @@ pub enum ApiError {
     Authenticate,
 
     #[error("Error encrypting message")]
-    Encryption
+    Encryption,
+
+    #[error("Error decrypting message")]
+    Decryption,
+
+    #[error("Api response error {0}")]
+    ApiResponse(String),
+
+    #[error("Error sending request")]
+    Send,
+
+    #[error("Error deserialising response")]
+    Deserialisation,
 }
 
 pub struct ApiSession {
@@ -28,7 +41,6 @@ pub struct ApiSession {
     key_pair: KeyPair,
     server_public_key: Public,
     encrypted_pre_auth_token: Option<EncryptedMessage>,
-    pre_auth_token: Option<PreAuthToken>,
     encrypted_auth_token: Option<EncryptedMessage>,
     auth_token: Option<AuthToken>,
     client: Client,
@@ -47,19 +59,16 @@ impl ApiSession {
         };
 
         let response: HandshakeResponse = client
-            .post("http://localhost:3000/handshake")
-            .json(&request)
-            .send()
-            .await
-            .unwrap()
-            .json()
-            .await
-            .unwrap();
+            .post("http://localhost:3000/handshake", &request)
+            .await?;
 
         let server_public_key = response.public_key;
         let token: PreAuthToken = key_pair
             .decrypt(&response.token, &server_public_key)
-            .unwrap();
+            .map_err(|error| {
+                log::error!("Error creating handshake {error}");
+                ApiError::Decryption
+            })?;
         let session_id = token.session_id;
 
         Ok(Self {
@@ -67,7 +76,6 @@ impl ApiSession {
             key_pair,
             server_public_key,
             encrypted_pre_auth_token: Some(response.token),
-            pre_auth_token: Some(token),
             encrypted_auth_token: None,
             auth_token: None,
             client,

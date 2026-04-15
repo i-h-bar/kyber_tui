@@ -1,4 +1,5 @@
 use crate::api::{ApiError, ApiSession};
+use crate::ports::services::request::RequestClient;
 use contracts::new_user::{NewUserRequest, NewUserResponse};
 use contracts::{GenericRequest, GenericResponse};
 
@@ -18,20 +19,17 @@ impl ApiSession {
             body: self
                 .key_pair
                 .encrypt(&request, &self.server_public_key)
-                .unwrap(),
+                .map_err(|error| {
+                    log::error!("Error encrypting create user request {error}");
+                    ApiError::Decryption
+                })?,
             token: token.clone(),
         };
 
         let response: GenericResponse = self
             .client
-            .post("http://localhost:3000/new")
-            .json(&request)
-            .send()
-            .await
-            .unwrap()
-            .json()
-            .await
-            .unwrap();
+            .post("http://localhost:3000/new", &request)
+            .await?;
 
         let response: NewUserResponse = response
             .get_message(&self.key_pair, &self.server_public_key)

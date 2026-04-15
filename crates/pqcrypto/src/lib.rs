@@ -3,8 +3,8 @@ use crate::traits::{TryFromBytes, TryToBytes};
 use serde::{Deserializer, Serializer, de, ser};
 
 pub mod asym;
-pub mod traits;
 pub mod sym;
+pub mod traits;
 
 #[derive(Clone)]
 pub struct EncryptedMessage {

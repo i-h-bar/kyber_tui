@@ -1,9 +1,9 @@
 use crate::api::{ApiError, ApiSession};
+use crate::ports::services::request::RequestClient;
+use crate::utils::hashing;
 use contracts::auth::{AuthRequest, AuthResponse};
 use contracts::token::AuthToken;
 use contracts::{GenericRequest, GenericResponse};
-use crate::utils::hashing;
-use crate::utils::hashing::hash;
 
 impl ApiSession {
     pub async fn authenticate(
@@ -22,7 +22,7 @@ impl ApiSession {
             .key_pair
             .encrypt(&auth_request, &self.server_public_key)
             .map_err(|error| {
-                log::error!("Error encrypting auth request: {:?}", error);
+                log::error!("Error encrypting auth request: {error:?}");
                 ApiError::Authenticate
             })?;
 
@@ -34,19 +34,13 @@ impl ApiSession {
 
         let response: GenericResponse = self
             .client
-            .post("http://localhost:3000/auth")
-            .json(&request)
-            .send()
-            .await
-            .unwrap()
-            .json()
-            .await
-            .unwrap();
+            .post("http://localhost:3000/auth", &request)
+            .await?;
 
         let auth_token: AuthToken = response
             .get_token(&self.key_pair, &self.server_public_key)
             .map_err(|error| {
-                log::error!("Error decrypting token: {:?}", error);
+                log::error!("Error decrypting token: {error:?}");
                 ApiError::Authenticate
             })?;
 
@@ -58,17 +52,14 @@ impl ApiSession {
         let auth_response: AuthResponse = response
             .get_message(&self.key_pair, &self.server_public_key)
             .map_err(|error| {
-                log::error!("Error decrypting auth response: {:?}", error);
+                log::error!("Error decrypting auth response: {error:?}");
                 ApiError::Authenticate
             })?;
 
         self.auth_token = Some(auth_token);
         self.encrypted_auth_token = Some(response.token);
-        
-        let hash = match hashing::hash(&auth_request.password) {
-            Some(hash) => hash,
-            None => return Err(ApiError::Authenticate),
-        };
+
+        let Some(hash) = hashing::hash(&auth_request.password) else { return Err(ApiError::Authenticate) };
         self.secret = Some(hash);
 
         Ok(auth_response.success)
