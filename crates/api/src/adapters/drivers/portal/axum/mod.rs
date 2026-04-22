@@ -1,4 +1,4 @@
-use crate::adapters::drivers::portal::axum::routes::{add, authentication, handshake, new};
+use crate::adapters::drivers::portal::axum::routes::{add, authentication, handshake, new, get};
 use crate::domain::Application;
 use crate::ports::drivers::portal::Portal;
 use crate::ports::services::cache::Cache;
@@ -105,6 +105,19 @@ where
 
         self
     }
+
+    fn add_get_credential_route(mut self) -> Self {
+        self.router = self.router.route(
+            "/get",
+            post({
+                let app = Arc::clone(&self.application);
+                move |payload| get::run(app, payload)
+            }),
+        );
+
+        self
+    }
+
 
     async fn run(self) {
         axum::serve(self.listener, self.router)

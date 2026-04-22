@@ -26,7 +26,8 @@ async fn main() {
         .add_handshake_route()
         .add_new_user_route()
         .add_authentication_route()
-        .add_new_credential_route();
+        .add_new_credential_route()
+        .add_get_credential_route();
 
     log::info!("Initialised");
 

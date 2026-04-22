@@ -15,5 +15,6 @@ where
     fn add_new_user_route(self) -> Self;
     fn add_authentication_route(self) -> Self;
     fn add_new_credential_route(self) -> Self;
+    fn add_get_credential_route(self) -> Self;
     async fn run(self);
 }
