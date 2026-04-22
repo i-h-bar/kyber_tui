@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 pub mod auth;
+pub mod get_credential;
 pub mod handshake;
 pub mod new_credential;
 pub mod new_user;

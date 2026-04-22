@@ -18,7 +18,7 @@ pub struct Note {
     pub content: Vec<u8>,
 }
 
-pub struct Credential {
+pub struct CredentialIn {
     pub id: Uuid,
     pub service: Vec<u8>,
     pub username: Vec<u8>,
@@ -28,10 +28,23 @@ pub struct Credential {
     pub notes: Option<Vec<Note>>,
 }
 
+pub struct CredentialOut {
+    pub id: Uuid,
+    pub service: Vec<u8>,
+    pub username: Vec<u8>,
+    pub password: Vec<u8>,
+    pub notes: Option<Vec<Vec<u8>>>,
+}
+
 #[async_trait]
 pub trait PWStore {
     async fn create() -> Self;
     async fn create_user(&self, user_info: CreateUser) -> Result<Uuid, DomainError>;
     async fn get_auth_credentials(&self, username: &str) -> Result<AuthCredentials, DomainError>;
-    async fn upsert_credential(&self, credential: &Credential) -> Result<(), DomainError>;
+    async fn upsert_credential(&self, credential: &CredentialIn) -> Result<(), DomainError>;
+    async fn get_credential(
+        &self,
+        service_index: &[u8; 32],
+        user_id: &Uuid,
+    ) -> Result<CredentialOut, DomainError>;
 }

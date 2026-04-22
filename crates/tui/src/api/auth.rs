@@ -59,7 +59,9 @@ impl ApiSession {
         self.auth_token = Some(auth_token);
         self.encrypted_auth_token = Some(response.token);
 
-        let Some(hash) = hashing::hash(&auth_request.password) else { return Err(ApiError::Authenticate) };
+        let Some(hash) = hashing::hash(&auth_request.password) else {
+            return Err(ApiError::Authenticate);
+        };
         self.secret = Some(hash);
 
         Ok(auth_response.success)

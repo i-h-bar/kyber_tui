@@ -1,4 +1,4 @@
-use crate::adapters::drivers::portal::axum::routes::{add, authentication, handshake, new, get};
+use crate::adapters::drivers::portal::axum::routes::{add, authentication, get, handshake, new};
 use crate::domain::Application;
 use crate::ports::drivers::portal::Portal;
 use crate::ports::services::cache::Cache;
@@ -117,7 +117,6 @@ where
 
         self
     }
-
 
     async fn run(self) {
         axum::serve(self.listener, self.router)

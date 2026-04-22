@@ -29,11 +29,7 @@ where
         Ok(hash.finalize().into_bytes().into())
     }
 
-    pub fn construct_hash(
-        &self,
-        user_id: &Uuid,
-        payload: &str,
-    ) -> Result<[u8; 32], DomainError> {
+    pub fn construct_hash(&self, user_id: &Uuid, payload: &str) -> Result<[u8; 32], DomainError> {
         let mut hash = HmacSha256::new_from_slice(&self.root_secret).map_err(|error| {
             log::error!("Error creating HMAC_SHA256 from slice: {error:?}");
             DomainError::Hashing("Failed to construct HMAC_SHA256 from slice".into())

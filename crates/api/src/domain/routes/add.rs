@@ -1,7 +1,7 @@
 use crate::domain::Application;
 use crate::domain::errors::routes::DomainError;
 use crate::ports::services::cache::Cache;
-use crate::ports::services::pw_store::{Credential, Note, PWStore};
+use crate::ports::services::pw_store::{CredentialIn, Note, PWStore};
 use contracts::new_credential::{NewCredentialRequest, NewCredentialResponse};
 use contracts::{GenericRequest, GenericResponse};
 use pqcrypto::sym::Symmetric;
@@ -41,8 +41,7 @@ where
             log::info!("Failed to encrypt new password user credential: {error:?}");
             DomainError::Encryption("Failed to encrypt new user credential".into())
         })?;
-        let service_index =
-            self.construct_hash(&token.user_id, &new_credential.service_name)?;
+        let service_index = self.construct_hash(&token.user_id, &new_credential.service_name)?;
 
         let notes: Option<Vec<Note>> = new_credential.notes.map(|notes| {
             notes
@@ -58,7 +57,7 @@ where
                 .collect()
         });
 
-        let payload = Credential {
+        let payload = CredentialIn {
             id: credential_id,
             user_id: token.user_id,
             service,

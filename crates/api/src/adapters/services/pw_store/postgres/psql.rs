@@ -1,9 +1,13 @@
 use crate::adapters::services::pw_store::postgres::queries::auth::GET_AUTH_CREDENTIALS;
 use crate::adapters::services::pw_store::postgres::queries::create_user::CREATE_USER;
-use crate::adapters::services::pw_store::postgres::queries::credentials::UPSERT_CREDENTIAL;
+use crate::adapters::services::pw_store::postgres::queries::credentials::{
+    GET_CREDENTIAL, UPSERT_CREDENTIAL,
+};
 use crate::adapters::services::pw_store::postgres::queries::notes::UPSERT_NOTE;
 use crate::domain::errors::routes::DomainError;
-use crate::ports::services::pw_store::{AuthCredentials, CreateUser, Credential, PWStore};
+use crate::ports::services::pw_store::{
+    AuthCredentials, CreateUser, CredentialIn, CredentialOut, PWStore,
+};
 use async_trait::async_trait;
 use futures::future;
 use sqlx::postgres::PgPoolOptions;
@@ -62,7 +66,7 @@ impl PWStore for Postgres {
         result
     }
 
-    async fn upsert_credential(&self, credential: &Credential) -> Result<(), DomainError> {
+    async fn upsert_credential(&self, credential: &CredentialIn) -> Result<(), DomainError> {
         sqlx::query(UPSERT_CREDENTIAL)
             .bind(credential.id)
             .bind(&credential.service)
@@ -93,5 +97,21 @@ impl PWStore for Postgres {
         }
 
         Ok(())
+    }
+
+    async fn get_credential(
+        &self,
+        service_index: &[u8; 32],
+        user_id: &Uuid,
+    ) -> Result<CredentialOut, DomainError> {
+        sqlx::query_as::<_, CredentialOut>(GET_CREDENTIAL)
+            .bind(service_index)
+            .bind(user_id)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|error| {
+                log::warn!("Failed to fetch auth credentials {error}");
+                DomainError::Generic("Unable to fetch auth credentials".to_string())
+            })
     }
 }
