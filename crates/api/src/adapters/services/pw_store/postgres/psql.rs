@@ -110,8 +110,8 @@ impl PWStore for Postgres {
             .fetch_one(&self.pool)
             .await
             .map_err(|error| {
-                log::warn!("Failed to fetch auth credentials {error}");
-                DomainError::Generic("Unable to fetch auth credentials".to_string())
+                log::warn!("Failed to fetch credentials {error}");
+                DomainError::Generic("Unable to fetch credentials".to_string())
             })
     }
 }

@@ -16,7 +16,7 @@ select c.id as id,
        c.password as password,
        c.service as service,
        c.username as username,
-       array_agg(n.content) as notes
+       array_agg(n.content)
 filter ( where n.content is not null ) as notes from credentials as c
          join notes as n on c.id = n.credential_id
 where service_index = $1 and user_id = $2

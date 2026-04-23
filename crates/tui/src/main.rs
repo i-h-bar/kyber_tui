@@ -26,9 +26,7 @@ async fn main() {
             "FakeNotes3".to_string(),
         ]),
     };
-    let Ok(_) = session.add_credential(credential).await else {
-        return;
-    };
+    let credential_1 = session.get_credential_from_service(credential.service.clone()).await.unwrap();
 
-    println!("Session ID: {}", session.id());
+    println!("Credential {credential_1:?}");
 }
