@@ -1,6 +1,6 @@
 use crate::domain::errors::routes::DomainError;
 
-pub trait SymEncryptor<'a> {
+pub trait SymmetricCipher<'a> {
     fn new(secret: &'a [u8; 32]) -> Self;
 
     fn encrypt(&self, data: &[u8]) -> Result<Vec<u8>, DomainError>;
@@ -8,8 +8,8 @@ pub trait SymEncryptor<'a> {
     fn decrypt(&self, data: &[u8]) -> Result<Vec<u8>, DomainError>;
 }
 
-pub trait SymEncryptorFactory<'a> {
-    type Output: SymEncryptor<'a>;
+pub trait SymmetricCipherFactory<'a> {
+    type Output: SymmetricCipher<'a>;
 
     fn generate(secret: &'a [u8; 32]) -> Self::Output;
 }

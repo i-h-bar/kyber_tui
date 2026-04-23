@@ -1,5 +1,5 @@
 use crate::domain::errors::routes::DomainError;
-use crate::ports::services::encryption::{SymEncryptor, SymEncryptorFactory};
+use crate::ports::services::encryption::{SymmetricCipher, SymmetricCipherFactory};
 use pqcrypto::sym::Symmetric;
 use pqcrypto::sym::aes::AesCipher;
 use crate::domain::Application;
@@ -10,7 +10,7 @@ pub struct SymmetricEncryption<'a> {
     cipher: AesCipher<'a>,
 }
 
-impl<'a> SymEncryptor<'a> for SymmetricEncryption<'a> {
+impl<'a> SymmetricCipher<'a> for SymmetricEncryption<'a> {
     fn new(secret: &'a [u8; 32]) -> Self {
         Self {
             cipher: AesCipher::new(secret),
@@ -32,7 +32,7 @@ impl<'a> SymEncryptor<'a> for SymmetricEncryption<'a> {
     }
 }
 
-impl<'a, PW, C> SymEncryptorFactory<'a> for Application<C, PW>
+impl<'a, PW, C> SymmetricCipherFactory<'a> for Application<C, PW>
 where
     C: Cache + Send + Sync,
     PW: PWStore + Send + Sync,
