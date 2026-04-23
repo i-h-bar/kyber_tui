@@ -26,7 +26,10 @@ async fn main() {
             "FakeNotes3".to_string(),
         ]),
     };
-    let credential_1 = session.get_credential_from_service(credential.service.clone()).await.unwrap();
+    let credential_1 = session
+        .get_credential_from_service(credential.service.clone())
+        .await
+        .unwrap();
 
     println!("Credential {credential_1:?}");
 }

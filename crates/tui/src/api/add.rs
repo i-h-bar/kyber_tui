@@ -1,4 +1,3 @@
-use serde::Deserialize;
 use crate::api::{ApiError, ApiSession};
 use crate::ports::services::request::RequestClient;
 use contracts::new_credential::{NewCredentialRequest, NewCredentialResponse};
@@ -6,7 +5,7 @@ use contracts::token::AuthToken;
 use contracts::{GenericRequest, GenericResponse};
 use pqcrypto::sym::Symmetric;
 use pqcrypto::sym::aes::AesCipher;
-
+use serde::Deserialize;
 
 #[derive(Debug)]
 pub struct NewCredential {

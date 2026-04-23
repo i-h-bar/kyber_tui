@@ -1,7 +1,7 @@
 pub mod add;
 mod auth;
-pub mod new;
 pub mod get;
+pub mod new;
 
 use crate::adapters::services::request::Client;
 use crate::ports::services::request::RequestClient;

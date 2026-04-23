@@ -1,14 +1,15 @@
 use crate::domain::errors::routes::DomainError;
 
 pub trait SymEncryptor<'a> {
-    fn new_sym(secret: &'a [u8; 32]) -> Self;
+    fn new(secret: &'a [u8; 32]) -> Self;
 
-    fn encrypt(data: &[u8]) -> Result<Vec<u8>, DomainError>;
+    fn encrypt(&self, data: &[u8]) -> Result<Vec<u8>, DomainError>;
 
-    fn decrypt(data: &[u8]) -> Result<Vec<u8>, DomainError>;
+    fn decrypt(&self, data: &[u8]) -> Result<Vec<u8>, DomainError>;
 }
 
+pub trait SymEncryptorFactory<'a> {
+    type Output: SymEncryptor<'a>;
 
-pub trait SymEncryptorFactory<'a, T: SymEncryptor<'a>> {
-    fn generate() -> T;
+    fn generate(secret: &'a [u8; 32]) -> Self::Output;
 }

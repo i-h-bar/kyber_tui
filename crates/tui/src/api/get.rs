@@ -1,13 +1,11 @@
-use contracts::{GenericRequest, GenericResponse};
+use crate::api::add::NewCredential;
+use crate::api::{ApiError, ApiSession};
+use crate::ports::services::request::RequestClient;
 use contracts::get_credential::{GetCredentialRequest, GetCredentialResponse};
 use contracts::token::AuthToken;
-use pqcrypto::sym::aes::AesCipher;
+use contracts::{GenericRequest, GenericResponse};
 use pqcrypto::sym::Symmetric;
-use crate::api::{ApiError, ApiSession};
-use crate::api::add::NewCredential;
-use crate::ports::services::request::RequestClient;
-
-
+use pqcrypto::sym::aes::AesCipher;
 
 impl ApiSession {
     pub async fn get_credential_from_service(
@@ -60,32 +58,32 @@ impl ApiSession {
                 ApiError::Authenticate
             })?;
 
-        let service = String::from_utf8(
-        cipher.decrypt(&response.service).map_err(|error| {
+        let service = String::from_utf8(cipher.decrypt(&response.service).map_err(|error| {
             log::error!("Error decrypting service: {error:?}");
             ApiError::Decryption
-        })?).unwrap();
+        })?)
+        .unwrap();
         let username = String::from_utf8(cipher.decrypt(&response.username).map_err(|error| {
             log::error!("Error decrypting username: {error:?}");
             ApiError::Decryption
-        })?).unwrap();
+        })?)
+        .unwrap();
         let password = String::from_utf8(cipher.decrypt(&response.password).map_err(|error| {
             log::error!("Error decrypting password: {error:?}");
             ApiError::Decryption
-        })?).unwrap();
+        })?)
+        .unwrap();
         let notes: Option<Vec<String>> = response.notes.map(|note| {
-            note.iter().filter_map(|note| {
-                Some(String::from_utf8(cipher.decrypt(note).ok()?).unwrap())
-            }).collect()
+            note.iter()
+                .filter_map(|note| Some(String::from_utf8(cipher.decrypt(note).ok()?).unwrap()))
+                .collect()
         });
 
-        Ok(
-            NewCredential {
-                service,
-                username,
-                password,
-                notes,
-            }
-        )
+        Ok(NewCredential {
+            service,
+            username,
+            password,
+            notes,
+        })
     }
 }
