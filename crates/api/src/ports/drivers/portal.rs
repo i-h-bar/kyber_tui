@@ -4,13 +4,13 @@ use crate::ports::services::pw_store::PWStore;
 use async_trait::async_trait;
 
 #[async_trait]
-pub trait Portal<C, PW>
-where
-    C: Cache + Send + Sync,
-    PW: PWStore + Send + Sync,
+pub trait Portal<'b>
 {
-    async fn new(application: Application<C, PW>, bind_addr: Option<&str>) -> Self;
-    fn add_health_check_route(self) -> Self;
+    async fn new(bind_addr: Option<&str>) -> Self;
+    fn add_health_check_route<'a: 'b, C, PW>(self, application: &'a Application<C, PW>) -> Self 
+    where
+        C: Cache + Send + Sync,
+        PW: PWStore + Send + Sync ;
     fn add_handshake_route(self) -> Self;
     fn add_new_user_route(self) -> Self;
     fn add_authentication_route(self) -> Self;

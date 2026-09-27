@@ -6,13 +6,9 @@ use crate::ports::services::pw_store::PWStore;
 
 pub mod portal;
 
-pub async fn create_portal<C, PW>(
-    application: Application<C, PW>,
+pub async fn create_portal(
     bind_addr: Option<&str>,
-) -> impl Portal<C, PW>
-where
-    C: Cache + Send + Sync + 'static,
-    PW: PWStore + Send + Sync + 'static,
+) -> impl Portal
 {
-    AxumPortal::new(application, bind_addr).await
+    AxumPortal::new(bind_addr).await
 }
