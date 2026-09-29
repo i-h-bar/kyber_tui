@@ -13,15 +13,16 @@ use tokio::net::TcpListener;
 pub mod response_codes;
 pub mod routes;
 
-type AxumAppState<C, PW> = State<Arc<Application<C, PW>>>;
+type AxumAppState<C, PW> = State<ArcApp<C, PW>>;
+type ArcApp<C, PW> = Arc<Application<C, PW>>;
 
 pub struct AxumPortal<C, PW>
 where
     C: Cache + Send + Sync,
     PW: PWStore + Send + Sync,
 {
-    application: Arc<Application<C, PW>>,
-    router: Router<Arc<Application<C, PW>>>,
+    application: ArcApp<C, PW>,
+    router: Router<ArcApp<C, PW>>,
     listener: TcpListener,
 }
 
