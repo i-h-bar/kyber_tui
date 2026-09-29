@@ -1,15 +1,15 @@
 use crate::adapters::drivers::portal::axum::response_codes::map_domain_error;
-use crate::domain::Application;
 use crate::ports::services::cache::Cache;
 use crate::ports::services::pw_store::PWStore;
 use axum::Json;
 use contracts::{GenericRequest, GenericResponse};
 use http::StatusCode;
-use std::sync::Arc;
 use std::time::Instant;
+use axum::extract::State;
+use crate::adapters::drivers::portal::axum::AxumAppState;
 
 pub async fn run<C, PW>(
-    app: Arc<Application<C, PW>>,
+    State(app): AxumAppState<C, PW>,
     Json(payload): Json<GenericRequest>,
 ) -> Result<Json<GenericResponse>, StatusCode>
 where
